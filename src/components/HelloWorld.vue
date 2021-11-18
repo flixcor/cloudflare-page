@@ -1,6 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
+import { onMounted, ref } from 'vue';
+import HelloWorld from './HelloWorld.vue'
+import { ApiData } from '../types';
+const data = ref<ApiData>()
+onMounted(async () => {
+  const response = await fetch('/apidata')
+  const json = await response.json<ApiData>()
+  data.value = json
+})
 defineProps<{ msg: string }>()
 
 const count = ref(0)
@@ -8,6 +15,10 @@ const count = ref(0)
 
 <template>
   <h1>{{ msg }}</h1>
+
+  <template v-if="data">
+  api: {{ data  }}
+  </template>
 
   <p>
     Recommended IDE setup:
