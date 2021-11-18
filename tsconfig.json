@@ -10,6 +10,7 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "lib": ["esnext", "dom"],
+    "skipLibCheck": true,
     "types": ["@cloudflare/workers-types"]
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "functions/**/*.ts"]
