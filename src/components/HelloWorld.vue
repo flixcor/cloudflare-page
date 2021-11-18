@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import HelloWorld from './HelloWorld.vue'
 import { ApiData } from '../types';
 const data = ref<ApiData>()
 onMounted(async () => {
