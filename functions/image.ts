@@ -2,8 +2,8 @@ import { jsonResponse } from "./utilities"
 
 const url = 'https://image.shutterstock.com/image-photo/graphs-representing-stock-market-crash-600w-1658501806.jpg'
 export const onRequest: PagesFunction = async ({request}) => {
+    const accept = request.headers.get('accept')
     try {
-        const accept = request.headers.get('accept')
         const options: RequestInit | undefined = accept?.includes('image/avif')
             ? { cf: { image: { format: 'avif' } } }
             : undefined
@@ -12,6 +12,6 @@ export const onRequest: PagesFunction = async ({request}) => {
         img.headers.set('x-this-was-accepted', accept || 'undefined')
         return img
     } catch (error) {
-        return jsonResponse(error, { status: 500 })
+        return new Response(accept, { status: 500 })
     }
 }
