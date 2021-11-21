@@ -4,7 +4,7 @@ const url = 'https://image.shutterstock.com/image-photo/graphs-representing-stoc
 export const onRequest: PagesFunction = async ({request}) => {
     const accept = request.headers.get('accept')
     const options: RequestInit | undefined = accept?.includes('image/avif')
-            ? { cf: { image: { format: 'avif' } } }
+            ? undefined // ? { cf: { image: { format: 'avif' } } }
             : undefined
     try {
         const img = await fetch(url, options)
