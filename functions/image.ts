@@ -7,7 +7,7 @@ export const onRequest: PagesFunction = async ({request}) => {
             ? undefined // ? { cf: { image: { format: 'avif' } } }
             : undefined
     try {
-        const img = await fetch(url, options)
+        const img = await fetch(url)
         img.headers.set('x-this-was-accepted', accept || 'undefined')
         return img
     } catch (error) {
