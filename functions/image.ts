@@ -29,9 +29,11 @@ export const onRequest: PagesFunction = async ({request}) => {
         const img = await fetch(imageUrl, options)
         const varies = img.headers.get('Vary')
         const newVary = [varies,'Accept'].filter(x=> x).join(', ')
-        img.headers.set('Vary', newVary)
-        // img.headers.set('x-this-was-accepted', accept || 'undefined')
-        return img
+        return new Response(img.body, {
+            headers: {
+                'Vary': 'Accept, AcceptEncoding'
+            }
+        })
     } catch (error) {
         return new Response(JSON.stringify(error), { status: 500 })
     }
