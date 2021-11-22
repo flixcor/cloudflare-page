@@ -38,6 +38,7 @@ export const onRequest: PagesFunction = async ({request}) => {
             headers: {
                 ...img.headers,
                 'Vary': 'Accept, Accept-Encoding',
+                'x-opt': JSON.stringify(options)
             }
         })
     } catch (error) {
