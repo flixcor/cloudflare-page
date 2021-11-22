@@ -7,6 +7,11 @@ export const onRequest: PagesFunction = async ({request}) => {
     //         ? undefined // ? { cf: { image: { format: 'avif' } } }
     //         : undefined
     try {
+        const via = request.headers.get("via")
+        if (via && /image-resizing/.test(via)) {
+            return fetch(request)
+        }
+
         let url = new URL(request.url)
 
         // Cloudflare-specific options are in the cf object.
