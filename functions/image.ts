@@ -36,7 +36,8 @@ export const onRequest: PagesFunction = async ({request}) => {
         const newVary = [varies,'Accept'].filter(x=> x).join(', ')
         return new Response(img.body, {
             headers: {
-                'Vary': 'Accept, AcceptEncoding'
+                ...img.headers,
+                'Vary': 'Accept, Accept-Encoding',
             }
         })
     } catch (error) {
