@@ -27,6 +27,9 @@ export const onRequest: PagesFunction = async ({request}) => {
             options.cf.image.format = 'webp';
         }
         const img = await fetch(imageUrl, options)
+        const varies = img.headers.get('Vary')
+        const newVary = [varies,'Accept'].filter(x=> x).join(', ')
+        img.headers.set('Vary', newVary)
         // img.headers.set('x-this-was-accepted', accept || 'undefined')
         return img
     } catch (error) {
