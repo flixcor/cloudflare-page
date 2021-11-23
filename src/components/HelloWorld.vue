@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { ApiData } from '../types';
 const data = ref<ApiData>()
 onMounted(async () => {
@@ -10,6 +10,12 @@ onMounted(async () => {
 defineProps<{ msg: string }>()
 
 const count = ref(0)
+const imgRef = ref<HTMLElement | null>(null)
+const imgUrl = computed(() =>{
+  const {value} = imgRef
+  if(!value) return null
+  return `/media/highres.jpg?width=${value.offsetWidth}`
+})
 </script>
 
 <template>
@@ -42,7 +48,7 @@ const count = ref(0)
     <code>components/HelloWorld.vue</code> to test hot module replacement.
   </p>
 
-  <img :src="'/media/highres.jpg'" alt="highres">
+  <img width="100%" ref="imgRef" v-if="imgUrl" :src="imgUrl" alt="highres">
 </template>
 
 <style scoped>
