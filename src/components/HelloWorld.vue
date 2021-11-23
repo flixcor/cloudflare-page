@@ -13,7 +13,7 @@ const count = ref(0)
 const imgRef = ref<HTMLElement | null>(null)
 const imgUrl = computed(() =>{
   const {value} = imgRef
-  if(!value) return null
+  if(!value) return ''
   return `/media/highres.jpg?width=${value.offsetWidth}`
 })
 </script>
@@ -48,7 +48,7 @@ const imgUrl = computed(() =>{
     <code>components/HelloWorld.vue</code> to test hot module replacement.
   </p>
 
-  <img width="100%" ref="imgRef" v-if="imgUrl" :src="imgUrl" alt="highres">
+  <img width="100%" ref="imgRef" :src="imgUrl" alt="highres">
 </template>
 
 <style scoped>
