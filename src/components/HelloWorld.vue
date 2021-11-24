@@ -13,8 +13,7 @@ defineProps<{ msg: string }>()
 const count = ref(0)
 const imgRef = ref<HTMLElement | null>(null)
 const imgUrl = ref('')
-useResizeObserver(imgRef, ([entry]) => {
-  const {width, height} = entry.contentRect
+useResizeObserver(imgRef, ([{ contentRect: {width, height} }]) => {
   imgUrl.value = `https://cloudflare.flixcor.dev/media/highres.jpg?fit=crop&height=${height}&width=${width}`
 })
 </script>
