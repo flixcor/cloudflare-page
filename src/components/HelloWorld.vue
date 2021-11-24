@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue';
+import { useResizeObserver } from '@vueuse/core'
 import { ApiData } from '../types';
 const data = ref<ApiData>()
 onMounted(async () => {
@@ -11,10 +12,10 @@ defineProps<{ msg: string }>()
 
 const count = ref(0)
 const imgRef = ref<HTMLElement | null>(null)
-const imgUrl = computed(() =>{
-  const {value} = imgRef
-  if(!value) return ''
-  return `/media/highres.jpg?width=${value.offsetWidth}`
+const imgUrl = ref('')
+useResizeObserver(imgRef, ([entry]) => {
+  const {width, height} = entry.contentRect
+  imgUrl.value = `https://cloudflare.flixcor.dev/media/highres.jpg?fit=crop&height=${height}&width=${width}`
 })
 </script>
 
@@ -48,7 +49,7 @@ const imgUrl = computed(() =>{
     <code>components/HelloWorld.vue</code> to test hot module replacement.
   </p>
 
-  <img width="100%" ref="imgRef" :src="imgUrl" alt="highres">
+  <img ref="imgRef" :src="imgUrl" alt="highres">
 </template>
 
 <style scoped>
@@ -66,5 +67,11 @@ code {
   padding: 2px 4px;
   border-radius: 4px;
   color: #304455;
+}
+
+img {
+  width: 100%;
+  height: 500px;
+  display: block;
 }
 </style>
