@@ -1,13 +1,8 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue';
+import {  ref } from 'vue';
 import { useResizeObserver } from '@vueuse/core'
 import { ApiData } from '../types';
-const data = ref<ApiData>()
-onMounted(async () => {
-  const response = await fetch('/apidata')
-  const json = await response.json<ApiData>()
-  data.value = json
-})
+const data = await fetch('/apidata').then((r) => r.json<ApiData>()).catch(() => {})
 defineProps<{ msg: string }>()
 
 const count = ref(0)
