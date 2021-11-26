@@ -1,8 +1,19 @@
 import { parseURL } from "ufo"
 import { createRenderer } from "../dist/entry-server"
 import manifest from '../dist/ssr-manifest.json'
+import template from '../dist/index.html'
 
-const htmlMarker = `<!--app-html-->`
+const appMarker = `<!--app-html-->`
+const preloadMarker = `<!--preload-links-->`
+
+const appMarkerIndex = template.indexOf(appMarker)
+const preloadMarkerIndex = template.indexOf(preloadMarker)
+
+const start = template.substring(0, preloadMarkerIndex)
+const between = template.substring(preloadMarkerIndex + preloadMarker.length, appMarkerIndex)
+const end = template.substring(appMarkerIndex + appMarker.length)
+
+
 
 export const onRequest: PagesFunction[] = [
     async (context) => {
@@ -17,21 +28,16 @@ async function render(intermediateResponse: Response, path: string) {
         return intermediateResponse
     }
 
-    const template = await intermediateResponse.text()
-    const index = template.indexOf(htmlMarker)
-    if(index === -1) return intermediateResponse
-    const before = template.substring(0, index)
-    const after = template.substring(index + htmlMarker.length)
+    const [html, preloadLinks] = await createRenderer(path, manifest)
+    const all = [
+        start,
+        preloadLinks,
+        between,
+        html,
+        end
+    ]
 
-    const [pipe, preloadLinks] = await createRenderer(path, manifest)
-    const { writable, readable } = new TextEncoderStream()
-    writeStrings(writable, [
-        before.replace(`<!--preload-links-->`, preloadLinks),
-        pipe,
-        after
-    ])
-
-    return new Response(readable, intermediateResponse)
+    return new Response(all.join(), intermediateResponse)
 }
 
 async function writeStrings(writable: WritableStream<string>, strings: string[]) {
