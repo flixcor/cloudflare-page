@@ -22,10 +22,20 @@ async function render(intermediateResponse: Response, path: string) {
         const after = template.substring(index + htmlMarker.length)
 
         const [pipe, preloadLinks] = await createRenderer(path, manifest)
+        
+        const { write, close, readable } = getStreamStringWriter()
 
-        const all = before.replace(`<!--preload-links-->`, preloadLinks)
-            + pipe
-            + after 
+        write(before.replace(`<!--preload-links-->`, preloadLinks))
+        write(pipe)
+        write(after)
+        await close() 
 
-        return new Response(all, intermediateResponse)
+        return new Response(readable, intermediateResponse)
+}
+
+function getStreamStringWriter() {
+    const { writable, readable } = new TransformStream()
+    const encoder = new TextEncoder()
+    const writer = writable.getWriter()
+    return {readable, write: (s: string) => writer.write(encoder.encode(s)), close: writer.close}
 }
