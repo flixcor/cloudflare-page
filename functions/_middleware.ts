@@ -20,6 +20,7 @@ async function render(intermediateResponse: Response) {
         if(!intermediateResponse.headers.get('content-type')?.includes('text/html')) return intermediateResponse
         const template = await intermediateResponse.text()
         const index = template.indexOf(htmlMarker)
+        return new Response(index.toString())
         if(index === -1) return intermediateResponse
         const before = template.substring(0, index)
         const after = template.substring(index + htmlMarker.length)
