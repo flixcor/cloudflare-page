@@ -25,10 +25,10 @@ async function render(intermediateResponse: Response, url: string) {
         if(index === -1) return intermediateResponse
         const before = template.substring(0, index)
         const after = template.substring(index + htmlMarker.length)
-        const { pathname } = parseURL(intermediateResponse.url)
-        return new Response(pathname)
+        const parsedUrl = parseURL(intermediateResponse.url)
+        return new Response(JSON.stringify(parsedUrl))
 
-        const [pipe, preloadLinks] = await createRenderer(pathname, manifest)
+        const [pipe, preloadLinks] = await createRenderer(parsedUrl?.pathname || '/', manifest)
 
         const {readable, writable} = new TransformStream();
         const writer = writable.getWriter()
