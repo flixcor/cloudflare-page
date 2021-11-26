@@ -26,7 +26,7 @@ async function render(intermediateResponse: Response, url: string) {
         const before = template.substring(0, index)
         const after = template.substring(index + htmlMarker.length)
         const parsedUrl = parseURL(intermediateResponse.url)
-        return new Response(JSON.stringify(parsedUrl))
+        return new Response(JSON.stringify(intermediateResponse))
 
         const [pipe, preloadLinks] = await createRenderer(parsedUrl?.pathname || '/', manifest)
 
