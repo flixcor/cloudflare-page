@@ -4,7 +4,19 @@ const htmlMarker = `<!--app-html-->`
 
 export const onRequest: PagesFunction[] = [
     async ({next}) => {
-        const intermediateResponse = await next()
+        try {
+            return render(await next())
+        } catch (error) {
+            console.log(error)
+            if(typeof error === 'string') return new Response(error)
+            return new Response(JSON.stringify(error))            
+        }
+        
+    }
+]
+
+async function render(intermediateResponse: Response) {
+    
         if(!intermediateResponse.headers.get('content-type')?.includes('text/html')) return intermediateResponse
         const template = await intermediateResponse.text()
         const index = template.indexOf(htmlMarker)
@@ -25,5 +37,4 @@ export const onRequest: PagesFunction[] = [
         
         await writer.write(after)
         return new Response(readable)
-    }
-]
+}
