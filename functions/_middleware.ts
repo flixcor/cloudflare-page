@@ -26,18 +26,12 @@ async function render(intermediateResponse: Response, url: string) {
         const { pathname } = new URL(intermediateResponse.url)
         return new Response(pathname)
 
-        // const [pipe, preloadLinks] = await createRenderer(pathname, manifest)
+        const [pipe, preloadLinks] = await createRenderer(pathname, manifest)
 
-        // const {readable, writable} = new TransformStream();
-        // const writer = writable.getWriter()
-        // await writer.write(before.replace(`<!--preload-links-->`, preloadLinks))
-        // pipe(writable)
-        // try {
-        //     await writer.ready    
-        // } catch (error) {
-        //     console.log(error)
-        // }
-        
-        // await writer.write(after)
-        // return new Response(readable)
+        const {readable, writable} = new TransformStream();
+        const writer = writable.getWriter()
+        await writer.write(before.replace(`<!--preload-links-->`, preloadLinks))
+        await writer.write(pipe)
+        await writer.write(after)
+        return new Response(readable)
 }
