@@ -2,20 +2,13 @@ import { parseURL } from "ufo"
 import { createRenderer } from "../dist/entry-server"
 import manifest from '../dist/ssr-manifest.json'
 
-const appMarker = `<!--app-html-->`
-const preloadMarker = `<!--preload-links-->`
-
 class CommentHandler implements HTMLRewriterElementContentHandlers {
     constructor(private preloadLinks: string, private html: string){}
     comments(comment: Comment) {
-        switch (comment.text) {
-            case preloadMarker:
-                comment.replace(this.preloadLinks)
-                break;
-            case appMarker:
-                comment.replace(this.html)
-            default:
-                break;
+        if(comment.text.includes('preload')){
+            comment.replace(this.preloadLinks)
+        } else if (comment.text.includes('html')) {
+            comment.replace(this.html)
         }
     }
 }
@@ -28,8 +21,7 @@ async function handle(request: Request, response: Response) {
     const [html, preloadLinks] = await createRenderer(pathname, manifest)
     const handler = new CommentHandler(preloadLinks, html)
     return new HTMLRewriter()
-        .on('head', handler)
-        .on('div', handler)
+        .onDocument(handler)
         .transform(response)
 }
 
