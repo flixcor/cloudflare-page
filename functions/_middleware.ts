@@ -20,6 +20,19 @@ class CommentHandler implements HTMLRewriterElementContentHandlers {
     }
 }
 
+async function handle(request: Request, response: Response) {
+    if(!response.headers.get('content-type')?.includes('text/html')){
+        return response
+    }
+    const { pathname } = parseURL(request.url)
+    const [html, preloadLinks] = await createRenderer(pathname, manifest)
+    const handler = new CommentHandler(preloadLinks, html)
+    return new HTMLRewriter()
+        .on('head', handler)
+        .on('div', handler)
+        .transform(response)
+}
+
 export const onRequest: PagesFunction[] = [
     async (context) => {
         try {
@@ -33,15 +46,3 @@ export const onRequest: PagesFunction[] = [
         }
     }
 ]
-
-async function handle(request: Request, response: Response) {
-    if(!response.headers.get('content-type')?.includes('text/html')){
-        return response
-    }
-    const { pathname } = parseURL(request.url)
-    const [html, preloadLinks] = await createRenderer(pathname, manifest)
-    const handler = new CommentHandler(preloadLinks, html)
-    return new HTMLRewriter()
-        .on('div#app, head', handler)
-        .transform(response)
-}
