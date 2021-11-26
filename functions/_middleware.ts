@@ -7,7 +7,7 @@ const htmlMarker = `<!--app-html-->`
 export const onRequest: PagesFunction[] = [
     async ({next, request}) => {
         try {
-            return render(await next(request), request.url)
+            return await render(await next(request), request.url)
         } catch (error) {
             console.log(error)
             if(typeof error === 'string') return new Response(error)
