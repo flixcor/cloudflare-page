@@ -2,13 +2,17 @@ import { parseURL } from "ufo"
 import { createRenderer } from "../dist/entry-server"
 import manifest from '../dist/ssr-manifest.json'
 
-class CommentHandler implements HTMLRewriterElementContentHandlers {
+class CommentHandler implements HTMLRewriterDocumentContentHandlers {
     constructor(private preloadLinks: string, private html: string){}
     comments(comment: Comment) {
         if(comment.text.includes('preload')){
-            comment.replace(this.preloadLinks)
+            comment.replace(this.preloadLinks, {
+                html: true
+            })
         } else if (comment.text.includes('html')) {
-            comment.replace(this.html)
+            comment.replace(this.html, {
+                html: true
+            })
         }
     }
 }
