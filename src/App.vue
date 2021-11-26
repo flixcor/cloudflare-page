@@ -7,7 +7,12 @@ import HelloWorld from './components/HelloWorld.vue'
 <template>
   <img alt="Vue logo" src="./assets/logo.png" />
   <suspense>
-    <HelloWorld msg="Hello Vue 3 + TypeScript + Vite" />
+    <template #default>
+      <HelloWorld msg="Hello Vue 3 + TypeScript + Vite" />
+    </template>
+    <template #fallback>
+      <div>Loading...</div>
+    </template>
   </suspense>
 </template>
 
