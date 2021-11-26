@@ -6,7 +6,8 @@ const htmlMarker = `<!--app-html-->`
 
 export const onRequest: PagesFunction[] = [
     async (context) => {
-        return new Response(JSON.stringify(context))
+        const { pathname } = parseURL(context.request.url)
+        return new Response(pathname)
         
     }
 ]
