@@ -25,9 +25,14 @@ async function render(intermediateResponse: Response) {
         const before = template.substring(0, index)
         const after = template.substring(index + htmlMarker.length)
 
-        return new Response(after)
+        try {
+            const [pipe, preloadLinks] = await createRenderer(intermediateResponse.url, manifest)
+            return new Response(preloadLinks, intermediateResponse)    
+        } catch (error) {
+            return new Response(before + after, intermediateResponse)
+        }
 
-        const [pipe, preloadLinks] = await createRenderer(intermediateResponse.url, manifest)
+        
 
         const {readable, writable} = new TransformStream();
         const writer = writable.getWriter()
