@@ -1,17 +1,9 @@
 import { parseURL } from "ufo"
 import { createRenderer } from "../dist/entry-server"
 import manifest from '../dist/ssr-manifest.json'
-import template from '../dist/index.html'
 
 const appMarker = `<!--app-html-->`
 const preloadMarker = `<!--preload-links-->`
-
-const appMarkerIndex = template.indexOf(appMarker)
-const preloadMarkerIndex = template.indexOf(preloadMarker)
-
-const start = template.substring(0, preloadMarkerIndex)
-const between = template.substring(preloadMarkerIndex + preloadMarker.length, appMarkerIndex)
-const end = template.substring(appMarkerIndex + appMarker.length)
 
 class CommentHandler implements HTMLRewriterElementContentHandlers {
     constructor(private preloadLinks: string, private html: string){}
