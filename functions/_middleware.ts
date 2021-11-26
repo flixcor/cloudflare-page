@@ -21,20 +21,12 @@ async function render(intermediateResponse: Response, url: string) {
         const template = await intermediateResponse.text()
         const index = template.indexOf(htmlMarker)
         if(index === -1) return intermediateResponse
-        return new Response(url)
         const before = template.substring(0, index)
         const after = template.substring(index + htmlMarker.length)
         const { pathname } = new URL(intermediateResponse.url)
-        
-        try {
-            const [pipe, preloadLinks] = await createRenderer(pathname, manifest)
-            return new Response(preloadLinks, intermediateResponse)    
-        } catch (error) {
-            if(!error) return new Response('throw without error')
-            return new Response(JSON.stringify(error))
-        }
+        return new Response(pathname)
 
-        
+        // const [pipe, preloadLinks] = await createRenderer(pathname, manifest)
 
         // const {readable, writable} = new TransformStream();
         // const writer = writable.getWriter()
