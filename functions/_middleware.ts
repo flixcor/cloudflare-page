@@ -13,29 +13,33 @@ export const onRequest: PagesFunction[] = [
 ]
 
 async function render(intermediateResponse: Response, path: string) {
-    
-        if(!intermediateResponse.headers.get('content-type')?.includes('text/html')) return intermediateResponse
-        const template = await intermediateResponse.text()
-        const index = template.indexOf(htmlMarker)
-        if(index === -1) return intermediateResponse
-        const before = template.substring(0, index)
-        const after = template.substring(index + htmlMarker.length)
+    if(!intermediateResponse.headers.get('content-type')?.includes('text/html')){
+        return intermediateResponse
+    }
 
-        const [pipe, preloadLinks] = await createRenderer(path, manifest)
-        
-        const { write, close, readable } = getStreamStringWriter()
+    const template = await intermediateResponse.text()
+    const index = template.indexOf(htmlMarker)
+    if(index === -1) return intermediateResponse
+    const before = template.substring(0, index)
+    const after = template.substring(index + htmlMarker.length)
 
-        write(before.replace(`<!--preload-links-->`, preloadLinks))
-        write(pipe)
-        write(after)
-        await close() 
+    const [pipe, preloadLinks] = await createRenderer(path, manifest)
+    const { writable, readable } = new TextEncoderStream()
+    writeStrings(writable, [
+        before.replace(`<!--preload-links-->`, preloadLinks),
+        pipe,
+        after
+    ])
 
-        return new Response(readable, intermediateResponse)
+    return new Response(readable, intermediateResponse)
 }
 
-function getStreamStringWriter() {
-    const { writable, readable } = new TransformStream()
-    const encoder = new TextEncoder()
+async function writeStrings(writable: WritableStream<string>, strings: string[]) {
     const writer = writable.getWriter()
-    return {readable, write: (s: string) => writer.write(encoder.encode(s)), close: writer.close}
+    strings.forEach(async (x) => {
+        await writer.ready
+        await writer.write(x)
+    })
+    await writer.ready
+    await writer.close()
 }
