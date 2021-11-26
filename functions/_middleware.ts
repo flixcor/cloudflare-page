@@ -21,11 +21,11 @@ async function render(intermediateResponse: Response) {
         const template = await intermediateResponse.text()
         const index = template.indexOf(htmlMarker)
         if(index === -1) return intermediateResponse
-        
+        return new Response(intermediateResponse.url)
         const before = template.substring(0, index)
         const after = template.substring(index + htmlMarker.length)
         const { pathname } = new URL(intermediateResponse.url)
-        return new Response(pathname)
+        
         try {
             const [pipe, preloadLinks] = await createRenderer(pathname, manifest)
             return new Response(preloadLinks, intermediateResponse)    
