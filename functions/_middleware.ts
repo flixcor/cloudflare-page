@@ -24,7 +24,8 @@ async function render(intermediateResponse: Response, path: string) {
         return new Response(JSON.stringify({
             path,
             before,
-            after
+            after,
+            manifest
         }))
 
         const [pipe, preloadLinks] = await createRenderer(path, manifest)
