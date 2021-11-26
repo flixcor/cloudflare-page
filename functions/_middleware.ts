@@ -5,14 +5,8 @@ import manifest from '../dist/ssr-manifest.json'
 const htmlMarker = `<!--app-html-->`
 
 export const onRequest: PagesFunction[] = [
-    async ({next, request}) => {
-        try {
-            return await render(await next(request), request.url)
-        } catch (error) {
-            console.log(error)
-            if(typeof error === 'string') return new Response(error)
-            return new Response(JSON.stringify(error))            
-        }
+    async (context) => {
+        return new Response(JSON.stringify(context))
         
     }
 ]
