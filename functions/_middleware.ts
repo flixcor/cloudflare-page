@@ -1,4 +1,4 @@
-import { createRenderer } from "../src/entry-server"
+import { createRenderer } from "../dist/entry-server"
 import manifest from '../dist/ssr-manifest.json'
 const htmlMarker = `<!--app-html-->`
 
