@@ -10,11 +10,7 @@ const ssrConfig: UserConfig = {
   ...baseConfig,
   ssr,
   build: {
-    emptyOutDir: false,
-    ssr: true,
-    rollupOptions: {
-      input: './src/entry-server.ts'
-    }
+    emptyOutDir: false
   },
 }
 

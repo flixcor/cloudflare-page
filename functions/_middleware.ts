@@ -21,14 +21,18 @@ async function render(intermediateResponse: Response, path: string) {
         const before = template.substring(0, index)
         const after = template.substring(index + htmlMarker.length)
 
+        const [pipe, preloadLinks] = await createRenderer(path, manifest)
+
         return new Response(JSON.stringify({
             path,
             before,
             after,
-            manifest
+            manifest,
+            pipe,
+            preloadLinks
         }))
 
-        const [pipe, preloadLinks] = await createRenderer(path, manifest)
+        
 
         const {readable, writable} = new TransformStream();
         const writer = writable.getWriter()
