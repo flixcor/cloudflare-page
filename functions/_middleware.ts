@@ -25,13 +25,12 @@ async function render(intermediateResponse: Response) {
         const before = template.substring(0, index)
         const after = template.substring(index + htmlMarker.length)
         const { pathname } = new URL(intermediateResponse.url)
-
+        return new Response(pathname)
         try {
             const [pipe, preloadLinks] = await createRenderer(pathname, manifest)
             return new Response(preloadLinks, intermediateResponse)    
         } catch (error) {
             if(!error) return new Response('throw without error')
-            if(typeof error === 'string') return new Response(error)
             return new Response(JSON.stringify(error))
         }
 
