@@ -7,12 +7,12 @@ const htmlMarker = `<!--app-html-->`
 export const onRequest: PagesFunction[] = [
     async (context) => {
         const { pathname } = parseURL(context.request.url)
-        return new Response(pathname)
-        
+        const response = await context.next(context.request)
+        return render(response, pathname)
     }
 ]
 
-async function render(intermediateResponse: Response, url: string) {
+async function render(intermediateResponse: Response, path: string) {
     
         if(!intermediateResponse.headers.get('content-type')?.includes('text/html')) return intermediateResponse
         const template = await intermediateResponse.text()
@@ -20,10 +20,8 @@ async function render(intermediateResponse: Response, url: string) {
         if(index === -1) return intermediateResponse
         const before = template.substring(0, index)
         const after = template.substring(index + htmlMarker.length)
-        const parsedUrl = parseURL(intermediateResponse.url)
-        return new Response(JSON.stringify(intermediateResponse))
 
-        const [pipe, preloadLinks] = await createRenderer(parsedUrl?.pathname || '/', manifest)
+        const [pipe, preloadLinks] = await createRenderer(path, manifest)
 
         const {readable, writable} = new TransformStream();
         const writer = writable.getWriter()
