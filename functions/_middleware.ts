@@ -3,9 +3,9 @@ import manifest from '../dist/ssr-manifest.json'
 const htmlMarker = `<!--app-html-->`
 
 export const onRequest: PagesFunction[] = [
-    async ({next}) => {
+    async ({next, request}) => {
         try {
-            return render(await next())
+            return render(await next(request), request.url)
         } catch (error) {
             console.log(error)
             if(typeof error === 'string') return new Response(error)
@@ -15,13 +15,13 @@ export const onRequest: PagesFunction[] = [
     }
 ]
 
-async function render(intermediateResponse: Response) {
+async function render(intermediateResponse: Response, url: string) {
     
         if(!intermediateResponse.headers.get('content-type')?.includes('text/html')) return intermediateResponse
         const template = await intermediateResponse.text()
         const index = template.indexOf(htmlMarker)
         if(index === -1) return intermediateResponse
-        return new Response(intermediateResponse.url)
+        return new Response(url)
         const before = template.substring(0, index)
         const after = template.substring(index + htmlMarker.length)
         const { pathname } = new URL(intermediateResponse.url)
