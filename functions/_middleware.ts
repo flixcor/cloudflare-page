@@ -29,7 +29,9 @@ async function render(intermediateResponse: Response) {
             const [pipe, preloadLinks] = await createRenderer(intermediateResponse.url, manifest)
             return new Response(preloadLinks, intermediateResponse)    
         } catch (error) {
-            return new Response(before + after, intermediateResponse)
+            if(!error) return new Response('throw without error')
+            if(typeof error === 'string') return new Response(error)
+            return new Response(JSON.stringify(error))
         }
 
         
