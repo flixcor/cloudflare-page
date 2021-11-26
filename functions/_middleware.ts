@@ -23,21 +23,9 @@ async function render(intermediateResponse: Response, path: string) {
 
         const [pipe, preloadLinks] = await createRenderer(path, manifest)
 
-        return new Response(JSON.stringify({
-            path,
-            before,
-            after,
-            manifest,
-            pipe,
-            preloadLinks
-        }))
+        const all = before.replace(`<!--preload-links-->`, preloadLinks)
+            + pipe
+            + after 
 
-        
-
-        const {readable, writable} = new TransformStream();
-        const writer = writable.getWriter()
-        await writer.write(before.replace(`<!--preload-links-->`, preloadLinks))
-        await writer.write(pipe)
-        await writer.write(after)
-        return new Response(readable)
+        return new Response(all, intermediateResponse)
 }
