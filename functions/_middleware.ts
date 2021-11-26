@@ -12,16 +12,47 @@ const preloadMarkerIndex = template.indexOf(preloadMarker)
 const start = template.substring(0, preloadMarkerIndex)
 const between = template.substring(preloadMarkerIndex + preloadMarker.length, appMarkerIndex)
 const end = template.substring(appMarkerIndex + appMarker.length)
-
-
+new HTMLRewriter().on('head', )
+class CommentHandler implements HTMLRewriterElementContentHandlers {
+    constructor(private preloadLinks: string, private html: string){}
+    comments(comment: Comment) {
+        switch (comment.text) {
+            case preloadMarker:
+                comment.replace(this.preloadLinks)
+                break;
+            case appMarker:
+                comment.replace(this.html)
+            default:
+                break;
+        }
+    }
+}
 
 export const onRequest: PagesFunction[] = [
     async (context) => {
-        const { pathname } = parseURL(context.request.url)
-        const response = await context.next(context.request)
-        return render(response, pathname)
+        try {
+            const response = await context.next(context.request)
+            const result = await handle(context.request, response)
+            return result
+        } catch (error) {
+            return new Response(JSON.stringify({
+                error, context
+            }))
+        }
     }
 ]
+
+async function handle(request: Request, response: Response) {
+    if(!response.headers.get('content-type')?.includes('text/html')){
+        return response
+    }
+    const { pathname } = parseURL(request.url)
+    const [html, preloadLinks] = await createRenderer(pathname, manifest)
+    const handler = new CommentHandler(preloadLinks, html)
+    return new HTMLRewriter()
+        .on('div#app, head', handler)
+        .transform(response)
+}
 
 async function render(intermediateResponse: Response, path: string) {
     if(!intermediateResponse.headers.get('content-type')?.includes('text/html')){
