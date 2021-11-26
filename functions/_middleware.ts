@@ -34,16 +34,16 @@ async function render(intermediateResponse: Response) {
 
         
 
-        const {readable, writable} = new TransformStream();
-        const writer = writable.getWriter()
-        await writer.write(before.replace(`<!--preload-links-->`, preloadLinks))
-        pipe(writable)
-        try {
-            await writer.ready    
-        } catch (error) {
-            console.log(error)
-        }
+        // const {readable, writable} = new TransformStream();
+        // const writer = writable.getWriter()
+        // await writer.write(before.replace(`<!--preload-links-->`, preloadLinks))
+        // pipe(writable)
+        // try {
+        //     await writer.ready    
+        // } catch (error) {
+        //     console.log(error)
+        // }
         
-        await writer.write(after)
-        return new Response(readable)
+        // await writer.write(after)
+        // return new Response(readable)
 }
