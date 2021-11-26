@@ -6,5 +6,11 @@ export default defineConfig({
   plugins: [vue()],
   build: {
     emptyOutDir: false,
+    ssr: {
+      target: 'webworker'
+    },
+    rollupOptions: {
+      input: './src/entry-server.ts'
+    }
   }
 })
