@@ -1,5 +1,7 @@
+import { parseURL } from "ufo"
 import { createRenderer } from "../dist/entry-server"
 import manifest from '../dist/ssr-manifest.json'
+
 const htmlMarker = `<!--app-html-->`
 
 export const onRequest: PagesFunction[] = [
@@ -23,7 +25,7 @@ async function render(intermediateResponse: Response, url: string) {
         if(index === -1) return intermediateResponse
         const before = template.substring(0, index)
         const after = template.substring(index + htmlMarker.length)
-        const { pathname } = new URL(intermediateResponse.url)
+        const { pathname } = parseURL(intermediateResponse.url)
         return new Response(pathname)
 
         const [pipe, preloadLinks] = await createRenderer(pathname, manifest)

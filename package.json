@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@vueuse/core": "^7.0.3",
+    "ufo": "^0.7.9",
     "vue": "^3.2.16"
   },
   "devDependencies": {
