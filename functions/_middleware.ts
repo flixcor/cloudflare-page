@@ -42,10 +42,7 @@ const ssr: PagesFunction = async ({request, next, waitUntil}) => {
         const { preloadLinks, pipeToWebWritable } = await createRenderer(pathname, manifest)
         const {readable, writable} = new TransformStream()
         pipeToWebWritable(writable)
-        waitUntil(new Promise<void>((resolve) => {
-            
-            writable.close()
-        }))
+        waitUntil(writable.close())
         
         const handler = new CommentHandler(preloadLinks, readable)
         return new HTMLRewriter()
