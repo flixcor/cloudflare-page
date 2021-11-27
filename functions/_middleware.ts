@@ -11,14 +11,17 @@ class CommentHandler implements HTMLRewriterDocumentContentHandlers {
                 html: true
             })
         } else if (comment.text.includes('html')) {
-            comment.remove()
             const reader = this.html.getReader()
+            let str = ''
             while(true) {
                 const {done, value} = await reader.read()
                 if(value) {
-                    comment.after(decoder.decode(value))
+                    str += decoder.decode(value)
                 }
-                if(done) return
+                if(done) {
+                    comment.replace(str, { html: true })
+                    return
+                }
             }
         }
     }
@@ -34,7 +37,6 @@ const ssr: PagesFunction = async ({request, next}) => {
         const [render, preloadLinks] = await createRenderer(pathname, manifest)
         const {readable, writable} = new TransformStream()
         render(writable)
-        return new Response(readable)
         const handler = new CommentHandler(preloadLinks, readable)
         return new HTMLRewriter()
             .onDocument(handler)
