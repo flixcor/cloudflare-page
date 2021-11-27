@@ -38,11 +38,10 @@ const ssr: PagesFunction = async ({request, next}) => {
             return response
         }
         const { pathname } = parseURL(request.url)
-        const { preloadLinks, renderToString } = await createRenderer(pathname, manifest)
-        //
-        // const {readable, writable} = new TransformStream()
-        // render(writable) 
-        const handler = new CommentHandler(preloadLinks, renderToString)
+        const { preloadLinks, pipeToWebWritable } = await createRenderer(pathname, manifest)
+        const {readable, writable} = new TransformStream()
+        pipeToWebWritable(writable) 
+        const handler = new CommentHandler(preloadLinks, readable)
         return new HTMLRewriter()
             .onDocument(handler)
             .transform(response)
