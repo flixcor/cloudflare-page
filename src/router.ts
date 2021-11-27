@@ -10,8 +10,15 @@ export const createRouter = () => _createRouter({
   history: import.meta.env.SSR ? createMemoryHistory() : createWebHistory(),
   routes: [
       {
+        path: '/about',
+        component: () => import('./components/About.vue')
+      },
+      {
           path: '/:pathMatch(.*)',
-          component: () => import('./components/HelloWorld.vue')
+          component: () => import('./components/HelloWorld.vue'),
+          props: {
+            msg: 'Home'
+          }
       }
   ]
 })

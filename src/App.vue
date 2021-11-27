@@ -5,10 +5,21 @@ import HelloWorld from './components/HelloWorld.vue'
 </script>
 
 <template>
-  <img alt="Vue logo" src="./assets/logo.png" />
-  <suspense>
-    <HelloWorld msg="Hello Vue 3 + TypeScript + Vite" />
-  </suspense>
+  <img class="dp-b" alt="Vue logo" src="./assets/logo.png" />
+  <nav>
+    <router-link to="/">Home</router-link>
+    <router-link to="/about">About</router-link>
+  </nav>
+  <router-view v-slot="{ Component }">
+      <suspense>
+        <template #default>
+          <component :is="Component"/>
+        </template>
+        <template #fallback>
+          <div>Loading...</div>
+        </template>
+      </suspense>
+    </router-view>
 </template>
 
 <style>
@@ -19,5 +30,10 @@ import HelloWorld from './components/HelloWorld.vue'
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+nav {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
 }
 </style>
