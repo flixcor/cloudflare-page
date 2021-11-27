@@ -3,12 +3,12 @@ import {  ref } from 'vue';
 import { useResizeObserver } from '@vueuse/core'
 import { ApiData } from '../types'
 
-const data = await fetch('/apidata').then((r) => r.json<ApiData>()).catch(() => {})
+// const data = await fetch('/apidata').then((r) => r.json<ApiData>()).catch(() => {})
 defineProps<{ msg?: string }>()
 
 const count = ref(0)
 const imgRef = ref<HTMLElement | null>(null)
-const imgUrl = ref('')
+const imgUrl = ref('/media/highres.jpg')
 useResizeObserver(imgRef, ([{ contentRect: {width, height} }]) => {
   imgUrl.value = `/media/highres.jpg?fit=crop&height=${height}&width=${width}`
 })
@@ -17,9 +17,9 @@ useResizeObserver(imgRef, ([{ contentRect: {width, height} }]) => {
 <template>
   <div>
     <h1>{{ msg }}</h1>
-    <template v-if="data">
+    <!-- <template v-if="data">
     api: {{ data  }}
-    </template>
+    </template> -->
     <p>
       Recommended IDE setup:
       <a href="https://code.visualstudio.com/" target="_blank">VSCode</a>
