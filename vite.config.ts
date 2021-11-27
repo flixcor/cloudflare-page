@@ -1,14 +1,11 @@
-import type { SSROptions, UserConfig } from 'vite'
+import type { UserConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-
-const ssr: SSROptions = {
-  noExternal: /./,
-  target: 'webworker'
-}
 
 const config: UserConfig = {
   plugins: [vue()],
-  ssr
+  build: {
+    emptyOutDir: false
+  },
 }
 
 export default config

@@ -8,10 +8,7 @@ const ssr: SSROptions = {
 
 const ssrConfig: UserConfig = {
   ...baseConfig,
-  ssr,
-  build: {
-    emptyOutDir: false
-  },
+  ssr
 }
 
 export default ssrConfig
