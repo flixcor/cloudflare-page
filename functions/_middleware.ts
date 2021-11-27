@@ -15,18 +15,19 @@ class CommentHandler implements HTMLRewriterDocumentContentHandlers {
                 comment.replace(await this.html(), { html: true })
                 return
             }
-            const reader = this.html.getReader()
-            let str = ''
-            while(true) {
-                const {done, value} = await reader.read()
-                if(value) {
-                    str += decoder.decode(value)
-                }
-                if(done) {
-                    comment.replace(str, { html: true })
-                    return
-                }
-            }
+            comment.replace(this.html, {html: true})
+            // const reader = this.html.getReader()
+            // let str = ''
+            // while(true) {
+            //     const {done, value} = await reader.read()
+            //     if(value) {
+            //         str += decoder.decode(value)
+            //     }
+            //     if(done) {
+            //         comment.replace(str, { html: true })
+            //         return
+            //     }
+            // }
         }
     }
 }
