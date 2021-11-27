@@ -32,7 +32,7 @@ class CommentHandler implements HTMLRewriterDocumentContentHandlers {
     }
 }
 
-const ssr: PagesFunction = async ({request, next, waitUntil}) => {
+const ssr: PagesFunction = async ({request, next}) => {
     try {
         const response = await next(request)
         if(!response.headers.get('content-type')?.includes('text/html')){
@@ -42,7 +42,7 @@ const ssr: PagesFunction = async ({request, next, waitUntil}) => {
         const { preloadLinks, pipeToWebWritable } = await createRenderer(pathname, manifest)
         const {readable, writable} = new TransformStream()
         pipeToWebWritable(writable)
-        waitUntil(writable.close())
+        await writable.close()
         
         const handler = new CommentHandler(preloadLinks, readable)
         return new HTMLRewriter()
