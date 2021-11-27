@@ -38,22 +38,14 @@ const ssr: PagesFunction = async ({request, next}) => {
             return response
         }
         const { pathname } = parseURL(request.url)
-        const bodyTask = response.text()
         const { preloadLinks, renderToString } = await createRenderer(pathname, manifest)
-        const [template, appHtml] = await Promise.all([bodyTask, renderToString()])
-        
-        const html = template
-            .replace(`<!--preload-links-->`, preloadLinks)
-            .replace(`<!--app-html-->`, appHtml)
-
-        return new Response(html, response)
 
         // const {readable, writable} = new TransformStream()
         // render(writable)
-        // const handler = new CommentHandler(preloadLinks, renderToString)
-        // return new HTMLRewriter()
-        //     .onDocument(handler)
-        //     .transform(response)
+        const handler = new CommentHandler(preloadLinks, renderToString)
+        return new HTMLRewriter()
+            .onDocument(handler)
+            .transform(response)
     } catch (error) {
         return new Response(JSON.stringify({
             error, request, next
