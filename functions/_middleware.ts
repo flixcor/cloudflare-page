@@ -3,7 +3,7 @@ import { createRenderer } from "../dist/entry-server"
 import manifest from '../dist/ssr-manifest.json'
 
 class CommentHandler implements HTMLRewriterDocumentContentHandlers {
-    constructor(private preloadLinks: string, private html: string){}
+    constructor(private preloadLinks: string, private html: ReadableStream){}
     comments(comment: Comment) {
         if(comment.text.includes('preload')){
             comment.replace(this.preloadLinks, {
@@ -23,6 +23,7 @@ async function handle(request: Request, response: Response) {
     }
     const { pathname } = parseURL(request.url)
     const [html, preloadLinks] = await createRenderer(pathname, manifest)
+
     const handler = new CommentHandler(preloadLinks, html)
     return new HTMLRewriter()
         .onDocument(handler)
