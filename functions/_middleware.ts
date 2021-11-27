@@ -17,29 +17,25 @@ class CommentHandler implements HTMLRewriterDocumentContentHandlers {
     }
 }
 
-async function handle(request: Request, response: Response) {
-    if(!response.headers.get('content-type')?.includes('text/html')){
-        return response
+const ssr: PagesFunction = async ({request, next}) => {
+    try {
+        const response = await next(request)
+        if(!response.headers.get('content-type')?.includes('text/html')){
+            return response
+        }
+        const { pathname } = parseURL(request.url)
+        const [render, preloadLinks] = await createRenderer(pathname, manifest)
+        const {readable, writable} = new TransformStream()
+        render(writable)
+        const handler = new CommentHandler(preloadLinks, readable)
+        return new HTMLRewriter()
+            .onDocument(handler)
+            .transform(response)
+    } catch (error) {
+        return new Response(JSON.stringify({
+            error, request, next
+        }))
     }
-    const { pathname } = parseURL(request.url)
-    const [html, preloadLinks] = await createRenderer(pathname, manifest)
-
-    const handler = new CommentHandler(preloadLinks, html)
-    return new HTMLRewriter()
-        .onDocument(handler)
-        .transform(response)
 }
 
-export const onRequest: PagesFunction[] = [
-    async (context) => {
-        try {
-            const response = await context.next(context.request)
-            const result = await handle(context.request, response)
-            return result
-        } catch (error) {
-            return new Response(JSON.stringify({
-                error, context
-            }))
-        }
-    }
-]
+export const onRequest = [ssr] as const
