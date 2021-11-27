@@ -4,14 +4,11 @@ const path = require('path')
 const express = require('express')
 const compression = require('compression')
 const serveStatic = require('serve-static')
+const manifest = require('./dist/ssr-manifest.json')
+const resolve = (p) => path.resolve(__dirname, p)
+const indexProd = fs.readFileSync(resolve('dist/index.html'), 'utf-8')
 
 async function createServer() {
-  const resolve = (p) => path.resolve(__dirname, p)
-
-  const indexProd = fs.readFileSync(resolve('dist/index.html'), 'utf-8')
-
-  const manifest = require('./dist/ssr-manifest.json')
-
   const app = express()
 
   app.use(compression())
@@ -34,7 +31,7 @@ async function createServer() {
         .replace(`<!--preload-links-->`, preloadLinks)
         .replace(`<!--app-html-->`, await renderToString())
 
-      res.status(200).set({ 'Content-Type': 'text/html' }).end(html)
+      res.status(200).set({ 'Content-Type': 'text/html' }).end(template)
     } catch (e) {
       console.log(e.stack)
       res.status(500).end(e.stack)
@@ -44,5 +41,8 @@ async function createServer() {
   return { app }
 }
 
-// for test use
-exports.createServer = createServer
+createServer().then(({ app }) =>
+    app.listen(3000, () => {
+      console.log('http://localhost:3000')
+    })
+  )
