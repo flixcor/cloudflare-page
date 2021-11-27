@@ -4,13 +4,17 @@ import manifest from '../dist/ssr-manifest.json'
 
 const decoder = new TextDecoder()
 class CommentHandler implements HTMLRewriterDocumentContentHandlers {
-    constructor(private preloadLinks: string, private html: ReadableStream){}
+    constructor(private preloadLinks: string, private html: ReadableStream | (() => Promise<string>)){}
     async comments(comment: Comment) {
         if(comment.text.includes('preload')){
             comment.replace(this.preloadLinks, {
                 html: true
             })
         } else if (comment.text.includes('html')) {
+            if(typeof this.html === 'function') {
+                comment.replace(await this.html(), { html: true })
+                return
+            }
             const reader = this.html.getReader()
             let str = ''
             while(true) {
@@ -34,10 +38,10 @@ const ssr: PagesFunction = async ({request, next}) => {
             return response
         }
         const { pathname } = parseURL(request.url)
-        const [render, preloadLinks] = await createRenderer(pathname, manifest)
-        const {readable, writable} = new TransformStream()
-        render(writable)
-        const handler = new CommentHandler(preloadLinks, readable)
+        const { preloadLinks, renderToString } = await createRenderer(pathname, manifest)
+        // const {readable, writable} = new TransformStream()
+        // render(writable)
+        const handler = new CommentHandler(preloadLinks, renderToString)
         return new HTMLRewriter()
             .onDocument(handler)
             .transform(response)
