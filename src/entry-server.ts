@@ -1,6 +1,6 @@
 import { createApp } from './main'
 import type { SSRContext } from '@vue/server-renderer'
-import { pipeToWebWritable } from '@vue/server-renderer'
+import { pipeToWebWritable,renderToWebStream } from '@vue/server-renderer'
 
 type Manifest = Record<string, string[]>
 
@@ -22,7 +22,8 @@ export async function createRenderer(url: string, manifest: Manifest) {
     const preloadLinks = renderPreloadLinks(ctx.modules || [], manifest)
     return {
         pipeToWebWritable: (s: WritableStream) => pipeToWebWritable(app, ctx, s),
-        preloadLinks
+        preloadLinks,
+        renderToWebStream: () => renderToWebStream(app, ctx)
     }
 }
 
