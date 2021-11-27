@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import {  ref } from 'vue';
 import { useResizeObserver } from '@vueuse/core'
-import { ApiData } from '../types';
+import { ApiData } from '../types'
+
 const data = await fetch('/apidata').then((r) => r.json<ApiData>()).catch(() => {})
 defineProps<{ msg: string }>()
 
@@ -9,7 +10,7 @@ const count = ref(0)
 const imgRef = ref<HTMLElement | null>(null)
 const imgUrl = ref('')
 useResizeObserver(imgRef, ([{ contentRect: {width, height} }]) => {
-  imgUrl.value = `https://cloudflare.flixcor.dev/media/highres.jpg?fit=crop&height=${height}&width=${width}`
+  imgUrl.value = `/media/highres.jpg?fit=crop&height=${height}&width=${width}`
 })
 </script>
 
