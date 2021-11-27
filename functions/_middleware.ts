@@ -34,7 +34,6 @@ class CommentHandler implements HTMLRewriterDocumentContentHandlers {
 const ssr: PagesFunction = async ({request, next}) => {
     try {
         const response = await next(request)
-        return response
         if(!response.headers.get('content-type')?.includes('text/html')){
             return response
         }

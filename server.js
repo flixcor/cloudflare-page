@@ -31,7 +31,7 @@ async function createServer() {
         .replace(`<!--preload-links-->`, preloadLinks)
         .replace(`<!--app-html-->`, await renderToString())
 
-      res.status(200).set({ 'Content-Type': 'text/html' }).end(template)
+      res.status(200).set({ 'Content-Type': 'text/html' }).end(html)
     } catch (e) {
       console.log(e.stack)
       res.status(500).end(e.stack)
