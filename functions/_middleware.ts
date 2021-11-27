@@ -42,6 +42,7 @@ const ssr: PagesFunction = async ({request, next}) => {
         const { preloadLinks, renderToWebStream } = await createRenderer(pathname, manifest)
         // const {readable, writable} = new TransformStream()
         // pipeToWebWritable(writable) 
+        //
         const handler = new CommentHandler(preloadLinks, renderToWebStream())
         return new HTMLRewriter()
             .onDocument(handler)
