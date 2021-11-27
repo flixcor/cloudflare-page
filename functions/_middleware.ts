@@ -15,19 +15,19 @@ class CommentHandler implements HTMLRewriterDocumentContentHandlers {
                 comment.replace(await this.html(), { html: true })
                 return
             }
-            comment.replace(this.html, {html: true})
-            // const reader = this.html.getReader()
-            // let str = ''
-            // while(true) {
-            //     const {done, value} = await reader.read()
-            //     if(value) {
-            //         str += decoder.decode(value)
-            //     }
-            //     if(done) {
-            //         comment.replace(str, { html: true })
-            //         return
-            //     }
-            // }
+            // comment.replace(this.html, {html: true})
+            const reader = this.html.getReader()
+            let str = ''
+            while(true) {
+                const {done, value} = await reader.read()
+                if(value) {
+                    str += decoder.decode(value)
+                }
+                if(done) {
+                    comment.replace(str, { html: true })
+                    return
+                }
+            }
         }
     }
 }
@@ -39,12 +39,11 @@ const ssr: PagesFunction = async ({request, next}) => {
             return response
         }
         const { pathname } = parseURL(request.url)
-        const { preloadLinks, renderToWebStream } = await createRenderer(pathname, manifest)
-        // const {readable, writable} = new TransformStream()
-        // pipeToWebWritable(writable)
-        // await writable.close()
+        const { preloadLinks, pipeToWebWritable } = await createRenderer(pathname, manifest)
+        const {readable, writable} = new TransformStream()
+        pipeToWebWritable(writable)
         
-        const handler = new CommentHandler(preloadLinks, renderToWebStream())
+        const handler = new CommentHandler(preloadLinks, readable)
         return new HTMLRewriter()
             .onDocument(handler)
             .transform(response)
