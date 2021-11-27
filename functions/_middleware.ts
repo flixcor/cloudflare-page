@@ -10,9 +10,7 @@ class CommentHandler implements HTMLRewriterDocumentContentHandlers {
                 html: true
             })
         } else if (comment.text.includes('html')) {
-            comment.replace(this.html, {
-                html: true
-            })
+            comment.replace(this.html)
         }
     }
 }
