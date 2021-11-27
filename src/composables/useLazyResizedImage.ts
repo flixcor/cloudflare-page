@@ -1,7 +1,8 @@
 import type { Ref } from 'vue';
 import { useResizeObserver, useIntersectionObserver } from '@vueuse/core'
 import { ref, computed } from 'vue';
-import transparent from '../assets/transparent.gif'
+const transparent = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
 export default function useLazyResizedImage(el: Ref<HTMLElement | null>, url: string) {
     const widthRef = ref(0)
     const heightRef = ref(0)
