@@ -1,27 +1,17 @@
+<script setup lang="ts">
+// This starter template is using Vue 3 <script setup> SFCs
+// Check out https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup
+import HelloWorld from './components/HelloWorld.vue'
+</script>
+
 <template>
-  <div>
-    <router-link to="/">Home</router-link>|
-    <router-link to="/about">About</router-link>
-    <router-view v-slot="{ Component }">
-      <Suspense>
-        <component :is="Component" />
-      </Suspense>
-    </router-view>
-  </div>
+  <img alt="Vue logo" src="./assets/logo.png" />
+  <suspense>
+    <HelloWorld msg="Hello Vue 3 + TypeScript + Vite" />
+  </suspense>
 </template>
 
 <style>
-@font-face {
-  font-family: 'Inter';
-  font-style: italic;
-  font-weight: 400;
-  font-display: swap;
-  src: url('./assets/fonts/Inter-Italic.woff2#iefix') format('woff2'),
-    url('./assets/fonts/Inter-Italic.woff') format('woff');
-}
-.inter {
-  font-family: 'Inter';
-}
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
