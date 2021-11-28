@@ -7,7 +7,7 @@ defineProps<{ msg?: string }>()
 
 const count = ref(0)
 const imgRef = ref<HTMLElement | null>(null)
-const imgUrl = useLazyResizedImage(imgRef, '/media/highres.jpg')
+const { url, loading } = useLazyResizedImage(imgRef, '/media/highres.jpg')
 </script>
 
 <template>
@@ -34,7 +34,7 @@ const imgUrl = useLazyResizedImage(imgRef, '/media/highres.jpg')
     Edit
     <code>components/HelloWorld.vue</code> to test hot module replacement.
   </p>
-  <img ref="imgRef" :src="imgUrl" alt="highres">
+  <img ref="imgRef" :class="{ loading }" :src="url" alt="highres">
 </template>
 
 <style scoped>
@@ -58,5 +58,11 @@ img {
   width: 100%;
   height: 500px;
   display: block;
+  opacity: 100%;
+  transition: opacity 250ms ease-in;
+}
+
+img.loading {
+  opacity: 0;    
 }
 </style>
