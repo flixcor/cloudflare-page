@@ -43,23 +43,39 @@ const ssr: PagesFunction = async ({request, next, waitUntil}) => {
         const { pathname } = parseURL(request.url)
         const template = await response.text()
         const index = template.indexOf(appHtmlComment)
-        const before = template.substring(0, index)
+        const { preloadLinks, renderToSimpleStream } = await createRenderer(pathname, manifest)
+        let before = template.substring(0, index).replace(`<!--preload-links-->`, preloadLinks)
         const after = template.substring(index + appHtmlComment.length)
-        const { preloadLinks, pipeToWebWritable } = await createRenderer(pathname, manifest)
         const {readable, writable} = new TransformStream()
-        
 
-        toStream(before.replace(`<!--preload-links-->`, preloadLinks))
-            .pipeTo(writable)
-        // pipeToWebWritable(writable)
-        toStream(after).pipeTo(writable)
+        const writer = writable.getWriter()
+        writer.write(encoder.encode(before))
+
+        const write = (c: string) => writer.write(encoder.encode(c))
+        const destroy = writer.close
+        
+        renderToSimpleStream({
+            async push (content: string | null) {
+                if(content === null) {
+                    await write(after)
+                    return destroy()
+                }
+                if(before) {
+                    await write(before)
+                    before = ''
+                }
+                return write(content)
+            },
+            destroy
+        })
+
 
         return new Response(readable, response)
         
-        const handler = new CommentHandler(preloadLinks, readable)
-        return new HTMLRewriter()
-            .onDocument(handler)
-            .transform(response)
+        // const handler = new CommentHandler(preloadLinks, readable)
+        // return new HTMLRewriter()
+        //     .onDocument(handler)
+        //     .transform(response)
     } catch (error) {
         return new Response(JSON.stringify({
             error, request, next
@@ -68,12 +84,12 @@ const ssr: PagesFunction = async ({request, next, waitUntil}) => {
 }
 
 function toStream(before: string) {
-return new ReadableStream({
-start(controller) {
-controller.enqueue(encoder.encode(before))
-controller.close()
-},
-})
+    return new ReadableStream({
+        start(controller) {
+            controller.enqueue(encoder.encode(before))
+            controller.close()
+        },
+    })
 }
 
 async function writeText(input: Array<string|((s: WritableStream) => void)>, writable: WritableStream) {
