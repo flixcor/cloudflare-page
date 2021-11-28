@@ -1,7 +1,15 @@
 <template>
   <div>
     <img class="dp-b" alt="Vue logo" src="./assets/logo.png" />
-    <hello-world msg="Home" />
+    <nav>
+      <router-link to="/">Home</router-link>|
+      <router-link to="/about">About</router-link>
+    </nav>
+    <router-view #default="{Component}">
+      <suspense>
+        <component :is="Component" />
+      </suspense>
+    </router-view>
   </div>
 </template>
 
