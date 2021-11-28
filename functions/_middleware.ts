@@ -1,38 +1,9 @@
 import { parseURL } from "ufo"
-import { createRenderer } from "../dist/entry-server"
+import { getWebStream } from "../dist/entry-server"
 import manifest from '../dist/ssr-manifest.json'
 
-const encoder = new TextEncoder()
-const decoder = new TextDecoder()
 const appHtmlComment = `<!--app-html-->`
-class CommentHandler implements HTMLRewriterDocumentContentHandlers {
-    constructor(private preloadLinks: string, private html: ReadableStream | (() => Promise<string>)){}
-    async comments(comment: Comment) {
-        if(comment.text.includes('preload')){
-            comment.replace(this.preloadLinks, {
-                html: true
-            })
-        } else if (comment.text.includes('html')) {
-            if(typeof this.html === 'function') {
-                comment.replace(await this.html(), { html: true })
-                return
-            }
-            // comment.replace(this.html, {html: true})
-            const reader = this.html.getReader()
-            let str = ''
-            while(true) {
-                const {done, value} = await reader.read()
-                if(value) {
-                    str += decoder.decode(value)
-                }
-                if(done) {
-                    comment.replace(str, { html: true })
-                    return
-                }
-            }
-        }
-    }
-}
+const preloadHtmlComment = `<!--preload-links-->`
 
 const ssr: PagesFunction = async ({request, next, waitUntil}) => {
     try {
@@ -42,44 +13,11 @@ const ssr: PagesFunction = async ({request, next, waitUntil}) => {
         }
         const { pathname } = parseURL(request.url)
         const template = await response.text()
-        const index = template.indexOf(appHtmlComment)
-        const { getPreloadLinks, renderToSimpleStream } = await createRenderer(pathname, manifest)
-        const before = template.substring(0, index)
-        let initialized = false
-        const after = template.substring(index + appHtmlComment.length)
-        const {readable, writable} = new TransformStream()
+        const [beforePreload, rest] = template.split(preloadHtmlComment)
+        const [afterPreload, afterBody] = rest.split(appHtmlComment)
+        const stream = await getWebStream(pathname, manifest, beforePreload, afterPreload, afterBody)
 
-        const writer = writable.getWriter()
-        const write = (c: string) => writer.write(encoder.encode(c))
-        async function close() {
-            await write(after)
-            await writer.close()
-        }
-        
-        renderToSimpleStream({
-            push (content: string | null) {
-                if(content === null) {
-                    return close()
-                }
-                if(initialized) {
-                    return write(content)
-                }
-                initialized = true
-                const replaced = before.replace(`<!--preload-links-->`, getPreloadLinks())
-                return write(replaced + content)
-            },
-            destroy() {
-                writer.close()
-            }
-        })
-
-
-        return new Response(readable, response)
-        
-        // const handler = new CommentHandler(preloadLinks, readable)
-        // return new HTMLRewriter()
-        //     .onDocument(handler)
-        //     .transform(response)
+        return new Response(stream, response)
     } catch (error) {
         return new Response(JSON.stringify({
             error, request, next
@@ -87,36 +25,5 @@ const ssr: PagesFunction = async ({request, next, waitUntil}) => {
     }
 }
 
-function toStream(before: string) {
-    return new ReadableStream({
-        start(controller) {
-            controller.enqueue(encoder.encode(before))
-            controller.close()
-        },
-    })
-}
-
-async function writeText(input: Array<string|((s: WritableStream) => void)>, writable: WritableStream) {
-    let writer: WritableStreamDefaultWriter | null = null
-    for (let index = 0; index < input.length; index++) {
-        const element = input[index];
-        if(typeof element === 'string') {
-            if(!writer) {
-                writer = writable.getWriter()
-            }
-            writer.write(encoder.encode(element))
-        } else {
-            if(writer) {
-                await writer.close()
-                writer = null
-            }
-            element(writable)
-        }
-    }
-    if(writer) {
-        await writer.close()
-    }
-    // await writable.close()
-}
 
 export const onRequest = [ssr] as const
