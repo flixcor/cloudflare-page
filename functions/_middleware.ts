@@ -34,7 +34,7 @@ class CommentHandler implements HTMLRewriterDocumentContentHandlers {
     }
 }
 
-const ssr: PagesFunction = async ({request, next}) => {
+const ssr: PagesFunction = async ({request, next, waitUntil}) => {
     try {
         const response = await next(request)
         if(!response.headers.get('content-type')?.includes('text/html')){
@@ -47,9 +47,13 @@ const ssr: PagesFunction = async ({request, next}) => {
         const after = template.substring(index + appHtmlComment.length)
         const { preloadLinks, pipeToWebWritable } = await createRenderer(pathname, manifest)
         const {readable, writable} = new TransformStream()
-        await writeText(before, writable)
-        pipeToWebWritable(writable)
-        await writeText(after, writable)
+        
+        waitUntil(writeText([
+            before,
+            pipeToWebWritable,
+            after
+        ], writable))
+
         return new Response(readable, response)
         
         const handler = new CommentHandler(preloadLinks, readable)
@@ -63,10 +67,23 @@ const ssr: PagesFunction = async ({request, next}) => {
     }
 }
 
-async function writeText(text: string, writable: WritableStream) {
-    const writer= writable.getWriter()
-    await writer.write(encoder.encode(text))
-    await writer.close()
+async function writeText(input: Array<string|((s: WritableStream) => void)>, writable: WritableStream) {
+    let writer: WritableStreamDefaultWriter | null = null
+    for (let index = 0; index < input.length; index++) {
+        const element = input[index];
+        if(typeof element === 'string') {
+            if(!writer) {
+                writer = writable.getWriter()
+            }
+            writer.write(encoder.encode(element))
+        } else {
+            if(writer) {
+                await writer.close()
+                writer = null
+            }
+            element(writable)
+        }
+    }
 }
 
 export const onRequest = [ssr] as const
