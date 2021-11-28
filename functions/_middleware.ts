@@ -54,13 +54,12 @@ const ssr: PagesFunction = async ({request, next, waitUntil}) => {
         
         renderToSimpleStream({
             async push (content: string | null) {
+                if(content === null) return
                 if(!initialized) {
                     initialized = true
                     await write(before.replace(`<!--preload-links-->`, getPreloadLinks()))
                 }
-                if(content !== null) {
-                    await write(content)
-                }
+                await write(content)
             },
             async destroy() {
                 await write(after)
