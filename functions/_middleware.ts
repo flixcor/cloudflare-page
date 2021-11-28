@@ -50,7 +50,7 @@ const ssr: PagesFunction = async ({request, next, waitUntil}) => {
         
         waitUntil(writeText([
             before,
-            pipeToWebWritable,
+            // pipeToWebWritable,
             after
         ], writable))
 
