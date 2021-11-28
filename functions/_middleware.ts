@@ -43,8 +43,9 @@ const ssr: PagesFunction = async ({request, next, waitUntil}) => {
         const { pathname } = parseURL(request.url)
         const template = await response.text()
         const index = template.indexOf(appHtmlComment)
-        const { preloadLinks, renderToSimpleStream } = await createRenderer(pathname, manifest)
-        let before = template.substring(0, index).replace(`<!--preload-links-->`, preloadLinks)
+        const { getPreloadLinks, renderToSimpleStream } = await createRenderer(pathname, manifest)
+        const before = template.substring(0, index)
+        let initialized = false
         const after = template.substring(index + appHtmlComment.length)
         const {readable, writable} = new TransformStream()
 
@@ -54,9 +55,9 @@ const ssr: PagesFunction = async ({request, next, waitUntil}) => {
         
         renderToSimpleStream({
             async push (content: string | null) {
-                if(before) {
-                    await write(before)
-                    before = ''
+                if(!initialized) {
+                    initialized = true
+                    await write(before.replace(`<!--preload-links-->`, getPreloadLinks()))
                 }
                 if(content === null) {
                     await write(after)
