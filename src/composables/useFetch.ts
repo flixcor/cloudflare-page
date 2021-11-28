@@ -5,7 +5,7 @@ async function getJson<T>(url: string) {
     return response.json<T>()
 }
 
-export default async function useFetch<T>(url: string) {
+export default async function useFetch<T = any>(url: string): Promise<T> {
     const context = useSSRContext()
     if(import.meta.env.SSR) {
         try {

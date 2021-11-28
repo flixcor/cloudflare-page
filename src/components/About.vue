@@ -7,5 +7,11 @@ api: {{ apiData  }}
 
 <script setup lang="ts">
 import useFetch from '../composables/useFetch'
-const apiData = await useFetch('/apidata')
+type ToDo = {
+    userId: number,
+    id: number,
+    title: string,
+    completed: boolean
+}
+const apiData = await useFetch<ToDo>('https://jsonplaceholder.typicode.com/todos/1')
 </script>
