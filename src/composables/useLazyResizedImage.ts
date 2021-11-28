@@ -1,5 +1,5 @@
 import type { Ref } from 'vue';
-import { useResizeObserver, useIntersectionObserver } from '@vueuse/core'
+import { useResizeObserver, useIntersectionObserver, debouncedRef } from '@vueuse/core'
 import { ref, computed, watch } from 'vue';
 const transparent = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
 
@@ -22,7 +22,10 @@ export default function useLazyResizedImage(el: Ref<HTMLElement | null>, url: st
 
     const loading = ref(true)
 
-    const newUrl = computed(() => getUrl(url, widthRef.value, heightRef.value, isVisible.value))
+    const widthDebounced = debouncedRef(widthRef, 1000)
+    const heightDebounced = debouncedRef(heightRef, 1000)
+
+    const newUrl = computed(() => getUrl(url, widthDebounced.value, heightDebounced.value, isVisible.value))
 
     function onLoad() {
         loading.value = newUrl.value === transparent
