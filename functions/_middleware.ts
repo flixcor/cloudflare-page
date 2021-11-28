@@ -5,7 +5,7 @@ import manifest from '../dist/ssr-manifest.json'
 const appHtmlComment = `<!--app-html-->`
 const preloadHtmlComment = `<!--preload-links-->`
 
-const ssr: PagesFunction = async ({request, next, waitUntil}) => {
+const ssr: PagesFunction = async ({request, next}) => {
     try {
         const response = await next(request)
         if(!response.headers.get('content-type')?.includes('text/html')){
@@ -13,8 +13,8 @@ const ssr: PagesFunction = async ({request, next, waitUntil}) => {
         }
         const { pathname } = parseURL(request.url)
         const template = await response.text()
-        const [beforePreload, rest] = template.split(preloadHtmlComment)
-        const [afterPreload, afterBody] = rest.split(appHtmlComment)
+        const [beforePreload, rest] = template.split(preloadHtmlComment, 2)
+        const [afterPreload, afterBody] = rest.split(appHtmlComment, 2)
         const stream = await getWebStream(pathname, manifest, beforePreload, afterPreload, afterBody)
 
         return new Response(stream, response)
