@@ -3,6 +3,7 @@ import { createRenderer } from "../dist/entry-server"
 import manifest from '../dist/ssr-manifest.json'
 
 const encoder = new TextEncoder()
+const decoder = new TextDecoder()
 const appHtmlComment = `<!--app-html-->`
 class CommentHandler implements HTMLRewriterDocumentContentHandlers {
     constructor(private preloadLinks: string, private html: ReadableStream | (() => Promise<string>)){}
