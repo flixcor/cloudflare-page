@@ -49,8 +49,6 @@ const ssr: PagesFunction = async ({request, next, waitUntil}) => {
         const {readable, writable} = new TransformStream()
 
         const writer = writable.getWriter()
-        writer.write(encoder.encode(before))
-
         const write = (c: string) => writer.write(encoder.encode(c))
         const destroy = writer.close
         
