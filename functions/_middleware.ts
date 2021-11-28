@@ -54,13 +54,13 @@ const ssr: PagesFunction = async ({request, next, waitUntil}) => {
         
         renderToSimpleStream({
             async push (content: string | null) {
-                if(content === null) {
-                    await write(after)
-                    return destroy()
-                }
                 if(before) {
                     await write(before)
                     before = ''
+                }
+                if(content === null) {
+                    await write(after)
+                    return destroy()
                 }
                 return write(content)
             },
