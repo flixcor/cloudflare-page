@@ -51,20 +51,21 @@ const ssr: PagesFunction = async ({request, next, waitUntil}) => {
 
         const writer = writable.getWriter()
         const write = (c: string) => writer.write(encoder.encode(c))
+        async function destroy() {
+            await write(after)
+            await writer.close()
+        }
         
         renderToSimpleStream({
             async push (content: string | null) {
-                if(content === null) return
+                if(content === null) return destroy()
                 if(!initialized) {
                     initialized = true
                     await write(before.replace(`<!--preload-links-->`, getPreloadLinks()))
                 }
                 await write(content)
             },
-            async destroy() {
-                await write(after)
-                await writer.close()
-            }
+            destroy
         })
 
 
