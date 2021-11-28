@@ -48,7 +48,13 @@ const ssr: PagesFunction = async ({request, next, waitUntil}) => {
         const { preloadLinks, pipeToWebWritable } = await createRenderer(pathname, manifest)
         const {readable, writable} = new TransformStream()
         
-        await writeText([before, pipeToWebWritable, after], writable)
+        await writeText(
+            [
+                before, 
+                pipeToWebWritable, 
+                // after
+            ], 
+            writable)
 
         return new Response(readable, response)
         
@@ -80,6 +86,10 @@ async function writeText(input: Array<string|((s: WritableStream) => void)>, wri
             element(writable)
         }
     }
+    if(writer) {
+        await writer.close()
+    }
+    await writable.close()
 }
 
 export const onRequest = [ssr] as const
