@@ -89,7 +89,7 @@ async function writeText(input: Array<string|((s: WritableStream) => void)>, wri
     if(writer) {
         await writer.close()
     }
-    await writable.close()
+    // await writable.close()
 }
 
 export const onRequest = [ssr] as const
