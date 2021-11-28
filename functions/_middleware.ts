@@ -20,7 +20,7 @@ const ssr: PagesFunction = async ({request, next}) => {
         return new Response(stream, response)
     } catch (error) {
         return new Response(JSON.stringify({
-            error, request, next
+            error
         }))
     }
 }
