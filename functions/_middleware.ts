@@ -48,15 +48,11 @@ const ssr: PagesFunction = async ({request, next, waitUntil}) => {
         const { preloadLinks, pipeToWebWritable } = await createRenderer(pathname, manifest)
         const {readable, writable} = new TransformStream()
         
-        const readableStream = new ReadableStream({
-            start(controller) {
-            controller.enqueue(encoder.encode(before))
-            controller.close()
-            },
-        })
 
-        readableStream.pipeTo(writable)
-        pipeToWebWritable(writable)
+        toStream(before.replace(`<!--preload-links-->`, preloadLinks))
+            .pipeTo(writable)
+        // pipeToWebWritable(writable)
+        toStream(after).pipeTo(writable)
 
         return new Response(readable, response)
         
@@ -69,6 +65,15 @@ const ssr: PagesFunction = async ({request, next, waitUntil}) => {
             error, request, next
         }))
     }
+}
+
+function toStream(before: string) {
+return new ReadableStream({
+start(controller) {
+controller.enqueue(encoder.encode(before))
+controller.close()
+},
+})
 }
 
 async function writeText(input: Array<string|((s: WritableStream) => void)>, writable: WritableStream) {
