@@ -52,7 +52,7 @@ const ssr: PagesFunction = async ({request, next, waitUntil}) => {
             [
                 // before, 
                 pipeToWebWritable, 
-                after
+                // after
             ], 
             writable)
 
