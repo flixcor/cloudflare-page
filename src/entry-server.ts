@@ -22,6 +22,7 @@ export async function getWebStream(url: string, manifest: Manifest, beforePreloa
     let initialized = false
 
     async function close() {
+        await write(`<span id="context">${JSON.stringify(ctx)}</context>`)
         await write(afterBody)
         await writer.close()
     }
@@ -62,10 +63,6 @@ function renderPreloadLinks(modules: string[], manifest: Manifest) {
         }
     })
     return links
-}
-
-async function pipeToWeb(url: string, manifest: Manifest, stream: WritableStream, beforePreload: string, afterPreload: string, afterBody: string) {
-
 }
 
 function renderPreloadLink(file: string) {

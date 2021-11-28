@@ -5,23 +5,25 @@ async function getJson<T>(url: string) {
     return response.json<T>()
 }
 
-export default async function useFetch<T = any>(url: string): Promise<T> {
+function getFromContext<T>(key: string): T | undefined {
+    const el = document.getElementById('context')
+    const ctx = JSON.parse(el?.textContent || '{}')
+    return ctx[key] as T | undefined
+}
+
+export default async function useFetch<T = any>(url: string): Promise<T | undefined> {
     const context = useSSRContext()
     if(import.meta.env.SSR) {
         try {
-            const json = getJson<T>(url)
+            const json = await getJson<T>(url)
             if(context) {
                 context[url] = json
             }
             return json   
         } catch (error) {
             console.log(error)
+            return
         }
     }
-    if(context && context[url]){
-        const json = context[url]
-        context[url] = null
-        return json
-    }
-    return getJson<T>(url)
+    return getFromContext<T>(url) || getJson<T>(url)
 }
