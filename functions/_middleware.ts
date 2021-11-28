@@ -48,11 +48,7 @@ const ssr: PagesFunction = async ({request, next, waitUntil}) => {
         const { preloadLinks, pipeToWebWritable } = await createRenderer(pathname, manifest)
         const {readable, writable} = new TransformStream()
         
-        waitUntil(writeText([
-            before,
-            // pipeToWebWritable,
-            after
-        ], writable))
+        await writeText([before, after], writable)
 
         return new Response(readable, response)
         
