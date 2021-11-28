@@ -47,9 +47,9 @@ const ssr: PagesFunction = async ({request, next}) => {
         const after = template.substring(index + appHtmlComment.length)
         const { preloadLinks, pipeToWebWritable } = await createRenderer(pathname, manifest)
         const {readable, writable} = new TransformStream()
-        writeText(before, writable)
+        await writeText(before, writable)
         pipeToWebWritable(writable)
-        writeText(after, writable)
+        await writeText(after, writable)
         return new Response(readable, response)
         
         const handler = new CommentHandler(preloadLinks, readable)
