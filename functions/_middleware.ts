@@ -2,7 +2,8 @@ import { parseURL } from "ufo"
 import { createRenderer } from "../dist/entry-server"
 import manifest from '../dist/ssr-manifest.json'
 
-const decoder = new TextDecoder()
+const encoder = new TextEncoder()
+const appHtmlComment = `<!--app-html-->`
 class CommentHandler implements HTMLRewriterDocumentContentHandlers {
     constructor(private preloadLinks: string, private html: ReadableStream | (() => Promise<string>)){}
     async comments(comment: Comment) {
@@ -39,9 +40,15 @@ const ssr: PagesFunction = async ({request, next}) => {
             return response
         }
         const { pathname } = parseURL(request.url)
+        const template = await response.text()
+        const index = template.indexOf(appHtmlComment)
+        const before = template.substring(0, index)
+        const after = template.substring(index + appHtmlComment.length)
         const { preloadLinks, pipeToWebWritable } = await createRenderer(pathname, manifest)
         const {readable, writable} = new TransformStream()
+        writeText(before, writable)
         pipeToWebWritable(writable)
+        writeText(after, writable)
         return new Response(readable, response)
         
         const handler = new CommentHandler(preloadLinks, readable)
@@ -53,6 +60,12 @@ const ssr: PagesFunction = async ({request, next}) => {
             error, request, next
         }))
     }
+}
+
+async function writeText(text: string, writable: WritableStream) {
+    const writer= writable.getWriter()
+    await writer.write(encoder.encode(text))
+    await writer.close()
 }
 
 export const onRequest = [ssr] as const
