@@ -1,7 +1,6 @@
 import { createApp } from './main'
 import type { SSRContext } from '@vue/server-renderer'
 import { renderToSimpleStream } from '@vue/server-renderer'
-import { resolveComponent } from '@vue/runtime-core'
 
 type Manifest = Record<string, string[]>
 
@@ -28,9 +27,11 @@ export async function getWebStream<P extends string,A extends string>(url: strin
 
     async function close() {
         await write(`<span id="context">${JSON.stringify(ctx)}</context>`)
-        await writeToEnd(reader, writer)
+        await pipe(reader, writer)
         await writer.close()
     }
+
+    await pipeUntilText(reader, writer, preloadLinkComment)
 
     renderToSimpleStream(app, ctx, {
         push (content: string | null) {
@@ -39,9 +40,8 @@ export async function getWebStream<P extends string,A extends string>(url: strin
             }
             if(!initialized) {
                 initialized = true
-                writeUntilComment(reader, writer, preloadLinkComment)
                 write(renderPreloadLinks(ctx.modules || [], manifest))
-                writeUntilComment(reader, writer, appBodyComment)
+                pipeUntilText(reader, writer, appBodyComment)
             }
             write(content)
         },
@@ -91,11 +91,9 @@ function renderPreloadLink(file: string) {
     }
 }
 
-const openingTag = '<' as const
-type OpeningTag = typeof openingTag
-type HtmlComment<T extends string> = `${OpeningTag}!--${T}-->`
+type HtmlComment<T extends string> = `<!--${T}-->`
 
-async function writeToEnd(
+async function pipe(
     reader: ReadableStreamDefaultReader, 
     writer: WritableStreamDefaultWriter,
 ){
@@ -109,11 +107,13 @@ async function writeToEnd(
     }
 }
 
-async function writeUntilComment<T extends string>(
+async function pipeUntilText(
     reader: ReadableStreamDefaultReader, 
     writer: WritableStreamDefaultWriter,
-    comment: HtmlComment<T>) {
-    const length = comment.length
+    text: string) {
+    const length = text.length
+    if(length == 0) return
+    const firstChar = text[0]
     let buffer = ''
     let firstCharIndex = -1
     let done = false
@@ -124,12 +124,12 @@ async function writeUntilComment<T extends string>(
             done = res.done
             if(!res.value) continue
             buffer += decoder.decode(res.value)
-            firstCharIndex = buffer.indexOf(openingTag)
+            firstCharIndex = buffer.indexOf(firstChar)
         }
-        const [before, after] = buffer.split(openingTag)
+        const [before, after] = buffer.split(firstChar)
         writer.write(encoder.encode(before))
-        const fixed = openingTag + after
-        if(fixed === comment) return
+        const fixed = firstChar + after
+        if(fixed === text) return
         writer.write(encoder.encode(fixed))
         buffer = ''
     }
