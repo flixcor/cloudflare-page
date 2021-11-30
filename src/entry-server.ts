@@ -117,6 +117,7 @@ async function pipeUntilText(
     let buffer = ''
     let firstCharIndex = -1
     let done = false
+    //dummy commit
 
     while(!done) {
         while(!done && (firstCharIndex < 0 || buffer.length - firstCharIndex < length)) {
