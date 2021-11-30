@@ -5,7 +5,7 @@ import { renderToSimpleStream } from '@vue/server-renderer'
 type Manifest = Record<string, string[]>
 
 const encoder = new TextEncoder()
-const decoder = new TextDecoder()
+const decoder = new TextDecoder("utf-8")
 
 export async function getWebStream<P extends string,A extends string>(url: string, manifest: Manifest, htmlStream: ReadableStream, preloadLinkComment: HtmlComment<P>, appBodyComment: HtmlComment<A>): Promise<ReadableStream> {
     const { app, router } = createApp()
@@ -123,7 +123,7 @@ async function pipeUntilText(
             const res = await reader.read()
             done = res.done
             if(!res.value) continue
-            buffer += decoder.decode(res.value)
+            buffer += decoder.decode(res.value, {stream: true})
             firstCharIndex = buffer.indexOf(firstChar)
         }
         const [before, after] = buffer.split(firstChar)
