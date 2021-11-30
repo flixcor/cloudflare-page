@@ -1,10 +1,14 @@
 import { createApp } from './main'
 import type { SSRContext } from '@vue/server-renderer'
 import { renderToSimpleStream } from '@vue/server-renderer'
+import { resolveComponent } from '@vue/runtime-core'
 
 type Manifest = Record<string, string[]>
 
-export async function getWebStream(url: string, manifest: Manifest, beforePreload: string, afterPreload: string, afterBody: string): Promise<ReadableStream> {
+const encoder = new TextEncoder()
+const decoder = new TextDecoder()
+
+export async function getWebStream<P extends string,A extends string>(url: string, manifest: Manifest, htmlStream: ReadableStream, preloadLinkComment: HtmlComment<P>, appBodyComment: HtmlComment<A>): Promise<ReadableStream> {
     const { app, router } = createApp()
 
     // set the router to the desired URL before rendering
@@ -17,13 +21,14 @@ export async function getWebStream(url: string, manifest: Manifest, beforePreloa
     const ctx: SSRContext = {}
     const { writable, readable } = new TransformStream()
     const writer = writable.getWriter()
-    const encoder = new TextEncoder()
+    const reader = htmlStream.getReader()
+    
     const write = (c: string) => writer.write(encoder.encode(c))
     let initialized = false
 
     async function close() {
         await write(`<span id="context">${JSON.stringify(ctx)}</context>`)
-        await write(afterBody)
+        await writeToEnd(reader, writer)
         await writer.close()
     }
 
@@ -34,9 +39,9 @@ export async function getWebStream(url: string, manifest: Manifest, beforePreloa
             }
             if(!initialized) {
                 initialized = true
-                write(beforePreload)
+                writeUntilComment(reader, writer, preloadLinkComment)
                 write(renderPreloadLinks(ctx.modules || [], manifest))
-                write(afterPreload)
+                writeUntilComment(reader, writer, appBodyComment)
             }
             write(content)
         },
@@ -83,5 +88,49 @@ function renderPreloadLink(file: string) {
     } else {
         // TODO
         return ''
+    }
+}
+
+const openingTag = '<' as const
+type OpeningTag = typeof openingTag
+type HtmlComment<T extends string> = `${OpeningTag}!--${T}-->`
+
+async function writeToEnd(
+    reader: ReadableStreamDefaultReader, 
+    writer: WritableStreamDefaultWriter,
+){
+    let done = false
+    while(!done) {
+        const res = await reader.read()
+        done = res.done
+        if(res.value) {
+            writer.write(res.value)
+        }
+    }
+}
+
+async function writeUntilComment<T extends string>(
+    reader: ReadableStreamDefaultReader, 
+    writer: WritableStreamDefaultWriter,
+    comment: HtmlComment<T>) {
+    const length = comment.length
+    let buffer = ''
+    let firstCharIndex = -1
+    let done = false
+
+    while(!done) {
+        while(!done && (firstCharIndex < 0 || buffer.length - firstCharIndex < length)) {
+            const res = await reader.read()
+            done = res.done
+            if(!res.value) continue
+            buffer += decoder.decode(res.value)
+            firstCharIndex = buffer.indexOf(openingTag)
+        }
+        const [before, after] = buffer.split(openingTag)
+        writer.write(encoder.encode(before))
+        const fixed = openingTag + after
+        if(fixed === comment) return
+        writer.write(encoder.encode(fixed))
+        buffer = ''
     }
 }
