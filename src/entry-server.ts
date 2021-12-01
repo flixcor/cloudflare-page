@@ -14,21 +14,21 @@ export async function getWebStream<P extends string,A extends string>(url: strin
     // @vitejs/plugin-vue injects code into a component's setup() that registers
     // itself on ctx.modules. After the render, ctx.modules would contain all the
     // components that have been instantiated during this render call.
-    const ctx: SSRContext = {}
-    const { writable, readable } = new TransformStream<string,string>()
-    const result = readable.pipeThrough(new TextEncoderStream())
-    const writer = writable.getWriter()
-    const reader = htmlStream.pipeThrough(new TextDecoderStream()).getReader()
+    // const ctx: SSRContext = {}
+    // const { writable, readable } = new TransformStream<string,string>()
+    const result = htmlStream.pipeThrough(new TextDecoderStream()).pipeThrough(new TextEncoderStream())
+    // const writer = writable.getWriter()
+    // const reader = htmlStream.pipeThrough(new TextDecoderStream()).getReader()
     
-    let initialized = false
+    // let initialized = false
 
-    async function close() {
-        await writer.write(`<span id="context">${JSON.stringify(ctx)}</context>`)
-        await pipe(reader, writer)
-        await writer.close()
-    }
+    // async function close() {
+    //     await writer.write(`<span id="context">${JSON.stringify(ctx)}</context>`)
+    //     await pipe(reader, writer)
+    //     await writer.close()
+    // }
 
-    pipe(reader, writer)
+    // pipe(reader, writer)
 
     // await pipeUntilText(reader, writer, preloadLinkComment)
 
