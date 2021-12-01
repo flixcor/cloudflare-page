@@ -7,7 +7,7 @@ type Manifest = Record<string, string[]>
 const {decode} = new TextDecoder()
 const {encode} = new TextEncoder()
 
-export async function getWebStream<P extends string,A extends string>(url: string, manifest: Manifest, htmlStream: ReadableStream<Uint8Array>, preloadLinkComment: HtmlComment<P>, appBodyComment: HtmlComment<A>): Promise<ReadableStream> {
+export async function getWebStream<P extends string,A extends string>(url: string, manifest: Manifest, htmlStream: ReadableStream<Uint8Array>, preloadLinkComment: HtmlComment<P>, appBodyComment: HtmlComment<A>): Promise<ReadableStream<Uint8Array>> {
     const { app, router } = createApp()
 
     // set the router to the desired URL before rendering
@@ -22,7 +22,7 @@ export async function getWebStream<P extends string,A extends string>(url: strin
     const writer = writable.getWriter()
     const reader = htmlStream.getReader()
     
-    // let initialized = false
+    let initialized = false
 
     // async function close() {
     //     await writer.write(`<span id="context">${JSON.stringify(ctx)}</context>`)
@@ -34,22 +34,22 @@ export async function getWebStream<P extends string,A extends string>(url: strin
 
     // await pipeUntilText(reader, writer, preloadLinkComment)
 
-    // renderToSimpleStream(app, ctx, {
-    //     push (content: string | null) {
-    //         if(content === null) {
-    //             return close()
-    //         }
-    //         if(!initialized) {
-    //             initialized = true
-    //             writer.write(renderPreloadLinks(ctx.modules || [], manifest))
-    //             pipeUntilText(reader, writer, appBodyComment)
-    //         }
-    //         writer.write(content)
-    //     },
-    //     destroy() {
-    //         writer.close()
-    //     }
-    // })
+    renderToSimpleStream(app, ctx, {
+        push (content: string | null) {
+            if(content === null) {
+                return close()
+            }
+            if(!initialized) {
+                initialized = true
+                writer.write(encode(renderPreloadLinks(ctx.modules || [], manifest)))
+                pipeUntilText(reader, writer, appBodyComment)
+            }
+            writer.write(encode(content))
+        },
+        destroy() {
+            writer.close()
+        }
+    })
 
     return readable
 }
