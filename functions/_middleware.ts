@@ -1,5 +1,4 @@
 import { parseURL } from "ufo"
-import devalue from 'devalue'
 import { getWebStream } from "../dist/entry-server"
 import manifest from '../dist/ssr-manifest.json'
 
@@ -18,7 +17,7 @@ const ssr: PagesFunction = async ({request, next}) => {
 
         return new Response(stream, response)
     } catch (error) {
-        return new Response(devalue({
+        return new Response(JSON.stringify({
             error
         }))
     }
