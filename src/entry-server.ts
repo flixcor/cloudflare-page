@@ -28,7 +28,9 @@ export async function getWebStream<P extends string,A extends string>(url: strin
         await writer.close()
     }
 
-    await pipeUntilText(reader, writer, preloadLinkComment)
+    await pipe(reader, writer)
+
+    // await pipeUntilText(reader, writer, preloadLinkComment)
 
     // renderToSimpleStream(app, ctx, {
     //     push (content: string | null) {
@@ -104,31 +106,33 @@ async function pipe(
     }
 }
 
-async function pipeUntilText(
+async function pipeUntilText<T extends string>(
     reader: ReadableStreamDefaultReader<string>, 
     writer: WritableStreamDefaultWriter<string>,
-    text: string) {
+    text: HtmlComment<T>) {
     const length = text.length
-    if(length == 0) return
-    const firstChar = text[0]
+    const firstChar = '<'
+    const lastChar = '>'
+    const betweenChars = text.substring(1, text.length - 2)
     let buffer = ''
+    let found = false
     let firstCharIndex = -1
     let done = false
     //dummy commit
 
-    while(!done) {
-        while(!done && (firstCharIndex < 0 || buffer.length - firstCharIndex < length)) {
-            const res = await reader.read()
-            done = res.done
-            if(!res.value) continue
-            buffer += res.value
-            firstCharIndex = buffer.indexOf(firstChar)
+    while(!done && !found) {
+        const res = await reader.read()
+        done = res.done
+        if(!res.value) continue
+        buffer += res.value
+        if(buffer.indexOf(firstChar) === -1) {
+            await writer.write(buffer)
+            buffer = ''
+            return
         }
-        const [before, after] = buffer.split(firstChar)
-        writer.write(before)
-        const fixed = firstChar + after
-        if(fixed === text) return
-        writer.write(fixed)
-        buffer = ''
+        const [before, ...rest] = buffer.split(firstChar)
+        await writer.write(before)
+        
+        buffer = firstChar + rest.join(firstChar)
     }
 }
