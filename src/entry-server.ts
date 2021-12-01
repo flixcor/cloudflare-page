@@ -4,8 +4,8 @@ import { renderToSimpleStream } from '@vue/server-renderer'
 
 type Manifest = Record<string, string[]>
 
-const decoder = new TextDecoder()
-const encoder = new TextEncoder()
+const {decode} = new TextDecoder()
+const {encode} = new TextEncoder()
 
 export async function getWebStream<P extends string,A extends string>(url: string, manifest: Manifest, htmlStream: ReadableStream<Uint8Array>, preloadLinkComment: HtmlComment<P>, appBodyComment: HtmlComment<A>): Promise<ReadableStream> {
     const { app, router } = createApp()
@@ -30,7 +30,7 @@ export async function getWebStream<P extends string,A extends string>(url: strin
     //     await writer.close()
     // }
 
-    pipe(reader, writer)
+    pipeUntilText(reader, writer, preloadLinkComment)
 
     // await pipeUntilText(reader, writer, preloadLinkComment)
 
@@ -103,38 +103,35 @@ async function pipe(
         const res = await reader.read()
         done = res.done
         if(res.value) {
-            writer.write(encoder.encode(decoder.decode(res.value)))
+            writer.write(encode(decode(res.value)))
         }
     }
 }
 
 async function pipeUntilText<T extends string>(
-    reader: ReadableStreamDefaultReader<string>, 
-    writer: WritableStreamDefaultWriter<string>,
+    reader: ReadableStreamDefaultReader<Uint8Array>, 
+    writer: WritableStreamDefaultWriter<Uint8Array>,
     text: HtmlComment<T>) {
     const length = text.length
     const firstChar = '<'
-    const lastChar = '>'
-    const betweenChars = text.substring(1, text.length - 2)
     let buffer = ''
-    let found = false
-    let firstCharIndex = -1
     let done = false
-    //dummy commit
 
-    while(!done && !found) {
+    while(!done) {
         const res = await reader.read()
         done = res.done
         if(!res.value) continue
-        buffer += res.value
+        buffer += decode(res.value)
         if(buffer.indexOf(firstChar) === -1) {
-            await writer.write(buffer)
+            writer.write(encode(buffer))
             buffer = ''
-            return
+            continue
         }
-        const [before, ...rest] = buffer.split(firstChar)
-        await writer.write(before)
+        if(buffer.length !== length) continue
+        if(buffer === text) return
         
-        buffer = firstChar + rest.join(firstChar)
+        const [_, first, ...rest] = buffer.split(firstChar)
+        writer.write(encode(firstChar + first))
+        buffer = rest.length ? firstChar + rest.join(firstChar) : ''
     }
 }
