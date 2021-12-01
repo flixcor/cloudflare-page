@@ -4,10 +4,7 @@ import { renderToSimpleStream } from '@vue/server-renderer'
 
 type Manifest = Record<string, string[]>
 
-const encoder = new TextEncoder()
-const decoder = new TextDecoder("utf-8")
-
-export async function getWebStream<P extends string,A extends string>(url: string, manifest: Manifest, htmlStream: ReadableStream, preloadLinkComment: HtmlComment<P>, appBodyComment: HtmlComment<A>): Promise<ReadableStream> {
+export async function getWebStream<P extends string,A extends string>(url: string, manifest: Manifest, htmlStream: ReadableStream<Uint8Array>, preloadLinkComment: HtmlComment<P>, appBodyComment: HtmlComment<A>): Promise<ReadableStream> {
     const { app, router } = createApp()
 
     // set the router to the desired URL before rendering
@@ -18,15 +15,15 @@ export async function getWebStream<P extends string,A extends string>(url: strin
     // itself on ctx.modules. After the render, ctx.modules would contain all the
     // components that have been instantiated during this render call.
     const ctx: SSRContext = {}
-    const { writable, readable } = new TransformStream()
+    const { writable, readable } = new TransformStream<string,string>()
+    const result = readable.pipeThrough(new TextEncoderStream())
     const writer = writable.getWriter()
-    const reader = htmlStream.getReader()
+    const reader = htmlStream.pipeThrough(new TextDecoderStream()).getReader()
     
-    const write = (c: string) => writer.write(encoder.encode(c))
     let initialized = false
 
     async function close() {
-        await write(`<span id="context">${JSON.stringify(ctx)}</context>`)
+        await writer.write(`<span id="context">${JSON.stringify(ctx)}</context>`)
         await pipe(reader, writer)
         await writer.close()
     }
@@ -40,17 +37,17 @@ export async function getWebStream<P extends string,A extends string>(url: strin
             }
             if(!initialized) {
                 initialized = true
-                write(renderPreloadLinks(ctx.modules || [], manifest))
+                writer.write(renderPreloadLinks(ctx.modules || [], manifest))
                 pipeUntilText(reader, writer, appBodyComment)
             }
-            write(content)
+            writer.write(content)
         },
         destroy() {
             writer.close()
         }
     })
 
-    return readable
+    return result
 }
 
 function renderPreloadLinks(modules: string[], manifest: Manifest) {
@@ -94,8 +91,8 @@ function renderPreloadLink(file: string) {
 type HtmlComment<T extends string> = `<!--${T}-->`
 
 async function pipe(
-    reader: ReadableStreamDefaultReader, 
-    writer: WritableStreamDefaultWriter,
+    reader: ReadableStreamDefaultReader<string>, 
+    writer: WritableStreamDefaultWriter<string>,
 ){
     let done = false
     while(!done) {
@@ -108,8 +105,8 @@ async function pipe(
 }
 
 async function pipeUntilText(
-    reader: ReadableStreamDefaultReader, 
-    writer: WritableStreamDefaultWriter,
+    reader: ReadableStreamDefaultReader<string>, 
+    writer: WritableStreamDefaultWriter<string>,
     text: string) {
     const length = text.length
     if(length == 0) return
@@ -124,14 +121,14 @@ async function pipeUntilText(
             const res = await reader.read()
             done = res.done
             if(!res.value) continue
-            buffer += decoder.decode(res.value, {stream: true})
+            buffer += res.value
             firstCharIndex = buffer.indexOf(firstChar)
         }
         const [before, after] = buffer.split(firstChar)
-        writer.write(encoder.encode(before))
+        writer.write(before)
         const fixed = firstChar + after
         if(fixed === text) return
-        writer.write(encoder.encode(fixed))
+        writer.write(fixed)
         buffer = ''
     }
 }
