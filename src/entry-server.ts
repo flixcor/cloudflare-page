@@ -4,6 +4,9 @@ import { renderToSimpleStream } from '@vue/server-renderer'
 
 type Manifest = Record<string, string[]>
 
+const decoder = new TextDecoder()
+const encoder = new TextEncoder()
+
 export async function getWebStream<P extends string,A extends string>(url: string, manifest: Manifest, htmlStream: ReadableStream<Uint8Array>, preloadLinkComment: HtmlComment<P>, appBodyComment: HtmlComment<A>): Promise<ReadableStream> {
     const { app, router } = createApp()
 
@@ -14,11 +17,10 @@ export async function getWebStream<P extends string,A extends string>(url: strin
     // @vitejs/plugin-vue injects code into a component's setup() that registers
     // itself on ctx.modules. After the render, ctx.modules would contain all the
     // components that have been instantiated during this render call.
-    // const ctx: SSRContext = {}
-    // const { writable, readable } = new TransformStream<string,string>()
-    const result = htmlStream.pipeThrough(new TextDecoderStream()).pipeThrough(new TextEncoderStream())
-    // const writer = writable.getWriter()
-    // const reader = htmlStream.pipeThrough(new TextDecoderStream()).getReader()
+    const ctx: SSRContext = {}
+    const { writable, readable } = new TransformStream<Uint8Array,Uint8Array>()
+    const writer = writable.getWriter()
+    const reader = htmlStream.getReader()
     
     // let initialized = false
 
@@ -28,7 +30,7 @@ export async function getWebStream<P extends string,A extends string>(url: strin
     //     await writer.close()
     // }
 
-    // pipe(reader, writer)
+    pipe(reader, writer)
 
     // await pipeUntilText(reader, writer, preloadLinkComment)
 
@@ -49,7 +51,7 @@ export async function getWebStream<P extends string,A extends string>(url: strin
     //     }
     // })
 
-    return result
+    return readable
 }
 
 function renderPreloadLinks(modules: string[], manifest: Manifest) {
@@ -93,8 +95,8 @@ function renderPreloadLink(file: string) {
 type HtmlComment<T extends string> = `<!--${T}-->`
 
 async function pipe(
-    reader: ReadableStreamDefaultReader<string>, 
-    writer: WritableStreamDefaultWriter<string>,
+    reader: ReadableStreamDefaultReader<Uint8Array>, 
+    writer: WritableStreamDefaultWriter<Uint8Array>,
 ){
     let done = false
     while(!done) {
