@@ -30,22 +30,22 @@ export async function getWebStream<P extends string,A extends string>(url: strin
 
     await pipeUntilText(reader, writer, preloadLinkComment)
 
-    renderToSimpleStream(app, ctx, {
-        push (content: string | null) {
-            if(content === null) {
-                return close()
-            }
-            if(!initialized) {
-                initialized = true
-                writer.write(renderPreloadLinks(ctx.modules || [], manifest))
-                pipeUntilText(reader, writer, appBodyComment)
-            }
-            writer.write(content)
-        },
-        destroy() {
-            writer.close()
-        }
-    })
+    // renderToSimpleStream(app, ctx, {
+    //     push (content: string | null) {
+    //         if(content === null) {
+    //             return close()
+    //         }
+    //         if(!initialized) {
+    //             initialized = true
+    //             writer.write(renderPreloadLinks(ctx.modules || [], manifest))
+    //             pipeUntilText(reader, writer, appBodyComment)
+    //         }
+    //         writer.write(content)
+    //     },
+    //     destroy() {
+    //         writer.close()
+    //     }
+    // })
 
     return result
 }
