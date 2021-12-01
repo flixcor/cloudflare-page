@@ -103,7 +103,7 @@ async function pipe(
         const res = await reader.read()
         done = res.done
         if(res.value) {
-            writer.write(res.value)
+            writer.write(encoder.encode(decoder.decode(res.value)))
         }
     }
 }
