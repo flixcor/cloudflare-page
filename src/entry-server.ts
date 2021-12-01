@@ -30,7 +30,7 @@ export async function getWebStream<P extends string,A extends string>(url: strin
     //     await writer.close()
     // }
 
-    pipeUntilText(reader, writer, preloadLinkComment)
+    await pipeUntilText(reader, writer, preloadLinkComment)
 
     // await pipeUntilText(reader, writer, preloadLinkComment)
 
